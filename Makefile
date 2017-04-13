@@ -3,3 +3,4 @@ all: Typecheck.java
 
 clean:
 	rm */*.class
+	rm *.class
