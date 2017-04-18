@@ -214,7 +214,7 @@ public class DMVisitor extends DepthFirstVisitor {
    * f0 -> "int"
    */
   public void visit(IntegerType n) {
-    System.out.println(n.f0);
+    //System.out.println(n.f0);
     n.f0.accept(this);
   }
 
@@ -487,12 +487,13 @@ public class DMVisitor extends DepthFirstVisitor {
   //  n.f0.accept(this);
   //}
 
-  ///**
-  // * f0 -> <IDENTIFIER>
-  // */
-  //public void visit(Identifier n) {
-  //  n.f0.accept(this);
-  //}
+  /**
+   * f0 -> <IDENTIFIER>
+   */
+  public void visit(Identifier n) {
+    n.f0.accept(this);
+    System.out.println(n.f0);
+  }
 
   ///**
   // * f0 -> "this"
