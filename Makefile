@@ -1,4 +1,9 @@
-all: Typecheck.java
+all: Typecheck
+
+run:
+	java Typecheck < tests/Phase1Tester/SelfTestCases/Basic.java
+
+Typecheck:
 	javac Typecheck.java
 
 clean:
