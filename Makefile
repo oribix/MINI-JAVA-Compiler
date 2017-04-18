@@ -1,6 +1,6 @@
 all: Typecheck
 
-run:
+run: Typecheck
 	java Typecheck < tests/Phase1Tester/SelfTestCases/Basic.java
 
 Typecheck:
