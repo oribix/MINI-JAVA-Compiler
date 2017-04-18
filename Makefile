@@ -2,5 +2,5 @@ all: Typecheck.java
 	javac Typecheck.java
 
 clean:
-	rm */*.class
-	rm *.class
+	rm -f *.class
+	rm -f */*.class
