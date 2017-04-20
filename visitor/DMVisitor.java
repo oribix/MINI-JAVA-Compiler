@@ -1,5 +1,6 @@
 package visitor;
 import syntaxtree.*;
+import symboltable.*;
 import java.util.*;
 
 public class DMVisitor extends DepthFirstVisitor {
