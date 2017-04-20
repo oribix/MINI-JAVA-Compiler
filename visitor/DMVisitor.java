@@ -6,9 +6,11 @@ import java.util.*;
 public class DMVisitor extends DepthFirstVisitor {
 
   SymbolTable symbolTable;
+  SymbolType inheritedType;
 
   public DMVisitor(){
     symbolTable = new SymbolTable();
+    inheritedType = SymbolType.ST_NULL;
   }
 
   ///**
@@ -22,46 +24,48 @@ public class DMVisitor extends DepthFirstVisitor {
   //  n.f2.accept(this);
   //}
 
-  ///**
-  // * f0 -> "class"
-  // * f1 -> Identifier()
-  // * f2 -> "{"
-  // * f3 -> "public"
-  // * f4 -> "static"
-  // * f5 -> "void"
-  // * f6 -> "main"
-  // * f7 -> "("
-  // * f8 -> "String"
-  // * f9 -> "["
-  // * f10 -> "]"
-  // * f11 -> Identifier()
-  // * f12 -> ")"
-  // * f13 -> "{"
-  // * f14 -> ( VarDeclaration() )*
-  // * f15 -> ( Statement() )*
-  // * f16 -> "}"
-  // * f17 -> "}"
-  // */
-  //public void visit(MainClass n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //  n.f5.accept(this);
-  //  n.f6.accept(this);
-  //  n.f7.accept(this);
-  //  n.f8.accept(this);
-  //  n.f9.accept(this);
-  //  n.f10.accept(this);
-  //  n.f11.accept(this);
-  //  n.f12.accept(this);
-  //  n.f13.accept(this);
-  //  n.f14.accept(this);
-  //  n.f15.accept(this);
-  //  n.f16.accept(this);
-  //  n.f17.accept(this);
-  //}
+  /**
+   * f0 -> "class"
+   * f1 -> Identifier()
+   * f2 -> "{"
+   * f3 -> "public"
+   * f4 -> "static"
+   * f5 -> "void"
+   * f6 -> "main"
+   * f7 -> "("
+   * f8 -> "String"
+   * f9 -> "["
+   * f10 -> "]"
+   * f11 -> Identifier()
+   * f12 -> ")"
+   * f13 -> "{"
+   * f14 -> ( VarDeclaration() )*
+   * f15 -> ( Statement() )*
+   * f16 -> "}"
+   * f17 -> "}"
+   */
+  public void visit(MainClass n) {
+    n.f0.accept(this);
+    inheritedType = SymbolType.ST_CLASS;  // Pass type "class" to identifier
+    n.f1.accept(this);
+    inheritedType = SymbolType.ST_NULL;   // Remove inherited value
+    n.f2.accept(this);
+    n.f3.accept(this);
+    n.f4.accept(this);
+    n.f5.accept(this);
+    n.f6.accept(this);
+    n.f7.accept(this);
+    n.f8.accept(this);
+    n.f9.accept(this);
+    n.f10.accept(this);
+    n.f11.accept(this);
+    n.f12.accept(this);
+    n.f13.accept(this);
+    n.f14.accept(this);
+    n.f15.accept(this);
+    n.f16.accept(this);
+    n.f17.accept(this);
+  }
 
   ///**
   // * f0 -> ClassDeclaration()
@@ -71,43 +75,47 @@ public class DMVisitor extends DepthFirstVisitor {
   //  n.f0.accept(this);
   //}
 
-  ///**
-  // * f0 -> "class"
-  // * f1 -> Identifier()
-  // * f2 -> "{"
-  // * f3 -> ( VarDeclaration() )*
-  // * f4 -> ( MethodDeclaration() )*
-  // * f5 -> "}"
-  // */
-  //public void visit(ClassDeclaration n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //  n.f5.accept(this);
-  //}
+  /**
+   * f0 -> "class"
+   * f1 -> Identifier()
+   * f2 -> "{"
+   * f3 -> ( VarDeclaration() )*
+   * f4 -> ( MethodDeclaration() )*
+   * f5 -> "}"
+   */
+  public void visit(ClassDeclaration n) {
+    n.f0.accept(this);
+    inheritedType = SymbolType.ST_CLASS_EXTENDS;  // Pass type "class" to identifier
+    n.f1.accept(this);
+    inheritedType = SymbolType.ST_NULL;   // Remove inherited value
+    n.f2.accept(this);
+    n.f3.accept(this);
+    n.f4.accept(this);
+    n.f5.accept(this);
+  }
 
-  ///**
-  // * f0 -> "class"
-  // * f1 -> Identifier()
-  // * f2 -> "extends"
-  // * f3 -> Identifier()
-  // * f4 -> "{"
-  // * f5 -> ( VarDeclaration() )*
-  // * f6 -> ( MethodDeclaration() )*
-  // * f7 -> "}"
-  // */
-  //public void visit(ClassExtendsDeclaration n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //  n.f5.accept(this);
-  //  n.f6.accept(this);
-  //  n.f7.accept(this);
-  //}
+  /**
+   * f0 -> "class"
+   * f1 -> Identifier()
+   * f2 -> "extends"
+   * f3 -> Identifier()
+   * f4 -> "{"
+   * f5 -> ( VarDeclaration() )*
+   * f6 -> ( MethodDeclaration() )*
+   * f7 -> "}"
+   */
+  public void visit(ClassExtendsDeclaration n) {
+    n.f0.accept(this);
+    inheritedType = SymbolType.ST_CLASS_EXTENDS;  // Pass type "class extends" to identifier
+    n.f1.accept(this);
+    inheritedType = SymbolType.ST_NULL;           // Remove inherited value
+    n.f2.accept(this);
+    n.f3.accept(this);
+    n.f4.accept(this);
+    n.f5.accept(this);
+    n.f6.accept(this);
+    n.f7.accept(this);
+  }
 
   ///**
   // * f0 -> Type()
@@ -489,6 +497,36 @@ public class DMVisitor extends DepthFirstVisitor {
   public void visit(Identifier n) {
     n.f0.accept(this);
     System.out.println(n.f0);
+    System.out.println(inheritedType);
+
+    // Add to symbol table if identifier is a declaration
+    // Each case should include special symbolData (maybe derived classes?)
+    Scope currScope = null;
+    switch (inheritedType) {
+      case ST_NULL:
+        break;
+      case ST_CLASS:
+        currScope = symbolTable.getCurrentScope();
+
+        if (currScope == null)
+          System.err.println("error: no scope!");
+
+        currScope.addSymbol(n.f0, inheritedType);
+        currScope.addSymbol(n.f0, inheritedType);
+
+        break;
+      case ST_CLASS_EXTENDS:
+        currScope = symbolTable.getCurrentScope();
+
+        if (currScope == null)
+          System.err.println("error: no scope!");
+
+        currScope.addSymbol(n.f0, inheritedType);
+
+        break;
+      default:
+        System.err.println("error: unexpected case");
+    }
   }
 
   ///**

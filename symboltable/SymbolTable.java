@@ -15,16 +15,16 @@ public class SymbolTable{
   }
 
   //Enter a new scope
-  void newScope(){
+  public void newScope(){
     scopeStack.push(new Scope());
   }
 
   //exits the current scope
-  void exitScope(){
+  public void exitScope(){
     scopeStack.pop();
   }
 
-  Scope getCurrentScope(){
+  public Scope getCurrentScope(){
     Scope currScope = scopeStack.peek();
 
     if(currScope == null)
@@ -35,7 +35,7 @@ public class SymbolTable{
 
   //returns Symbol Data of the node passed in if it exists in the Symbol table
   //else null
-  SymbolData getSymbolData(NodeToken n, SymbolType st){
+  public SymbolData getSymbolData(NodeToken n, SymbolType st){
     String name = n.toString();
     for(Scope scope : scopeStack){
       //SymbolData st = scope.getSymbolData(n, st);
@@ -44,7 +44,7 @@ public class SymbolTable{
     return null;
   }
 
-  void addSymbol(NodeToken n, SymbolType type){
+  public void addSymbol(NodeToken n, SymbolType type){
     Scope scope = getCurrentScope();
     scope.addSymbol(n, type);
   }
