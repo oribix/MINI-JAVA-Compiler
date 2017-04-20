@@ -38,8 +38,8 @@ public class SymbolTable{
   public SymbolData getSymbolData(NodeToken n, SymbolType st){
     String name = n.toString();
     for(Scope scope : scopeStack){
-      //SymbolData st = scope.getSymbolData(n, st);
-      //if(st != null) return st;
+      SymbolData sd = scope.getSymbolData(n, st);
+      if(sd != null) return sd;
     }
     return null;
   }
