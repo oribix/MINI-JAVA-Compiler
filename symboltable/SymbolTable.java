@@ -33,9 +33,19 @@ public class SymbolTable{
     return currScope;
   }
 
+  //returns Symbol Data of the node passed in if it exists in the Symbol table
+  //else null
+  SymbolData getSymbolData(NodeToken n, SymbolType st){
+    String name = n.toString();
+    for(Scope scope : scopeStack){
+      //SymbolData st = scope.getSymbolData(n, st);
+      //if(st != null) return st;
+    }
+    return null;
+  }
+
   void addSymbol(NodeToken n, SymbolType type){
     Scope scope = getCurrentScope();
     scope.addSymbol(n, type);
   }
-
 }
