@@ -24,10 +24,11 @@ public class Scope{
 
         if (scopeClasses.containsKey(symbol))
           System.err.println("error: class \"" + n + "\" not distinct");
-        else {
+        else
           scopeClasses.put(symbol, sd);
-          System.out.println("inserted " + scopeClasses.size());
-        }
+
+        for (Symbol s : scopeClasses.keySet())
+          System.out.println("in scope: " + s);
         break;
 
       default:

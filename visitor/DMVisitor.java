@@ -512,7 +512,6 @@ public class DMVisitor extends DepthFirstVisitor {
           System.err.println("error: no scope!");
 
         currScope.addSymbol(n.f0, inheritedType);
-        currScope.addSymbol(n.f0, inheritedType);
 
         break;
       case ST_CLASS_EXTENDS:

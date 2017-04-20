@@ -10,7 +10,17 @@ public class Symbol{
   }
 
   @Override
+  public String toString() {
+    return name;
+  }
+
+  @Override
   public boolean equals(Object o) {
     return o == null ? false : this.name.equals(((Symbol) o).name);
+  }
+
+  @Override
+  public int hashCode() {
+    return name.hashCode();
   }
 };
