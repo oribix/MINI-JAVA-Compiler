@@ -7,10 +7,16 @@ public class DMVisitor extends DepthFirstVisitor {
 
   SymbolTable symbolTable;
   SymbolType inheritedType;
+  SymbolData deepInheritedType;
+
+  boolean declaringType;
 
   public DMVisitor(){
     symbolTable = new SymbolTable();
     inheritedType = SymbolType.ST_NULL;
+    deepInheritedType = null;
+
+    declaringType = false;
   }
 
   ///**
@@ -200,10 +206,9 @@ public class DMVisitor extends DepthFirstVisitor {
    *       | Identifier()
    */
   public void visit(Type n) {
+    declaringType = true; // Used by Identifier if declaration is type CLASS_VAR
     n.f0.accept(this);
-
-    if (inheritedType == SymbolType.ST_NULL)
-      inheritedType = SymbolType.ST_CLASS_VAR;
+    declaringType = false;
   }
 
   /**
@@ -216,6 +221,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f2.accept(this);
 
+    // If type is method, then array is return type of method
     if (inheritedType != SymbolType.ST_METHOD)
       inheritedType = SymbolType.ST_INT_ARR;
   }
@@ -226,6 +232,7 @@ public class DMVisitor extends DepthFirstVisitor {
   public void visit(BooleanType n) {
     n.f0.accept(this);
 
+    // If type is method, then boolean is return type of method
     if (inheritedType != SymbolType.ST_METHOD)
       inheritedType = SymbolType.ST_BOOLEAN;
   }
@@ -237,6 +244,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //System.out.println(n.f0);
     n.f0.accept(this);
 
+    // If type is method, then integer is return type of method
     if (inheritedType != SymbolType.ST_METHOD)
       inheritedType = SymbolType.ST_INT;
   }
@@ -519,11 +527,17 @@ public class DMVisitor extends DepthFirstVisitor {
     /* Add to symbol table if identifier is a declaration
      * Each case should include special symbolData (maybe derived classes?)
      *
-     * 
+     * If not a declaration, identifier is a variable access?? (Check later)
      */
     Scope currScope = null;
     switch (inheritedType) {
+
+      // NEXT TIME: Be sure to check that declared class exists (or backpatch), put in symbol table, do with methods
       case ST_NULL:
+        if (declaringType) {
+          inheritedType = SymbolType.ST_CLASS_VAR;
+          deepInheritedType = new ClassVarData(n.f0);
+        }
         break;
 
       // Used in methods, parameters, or variables. Same action as String[]
@@ -544,7 +558,8 @@ public class DMVisitor extends DepthFirstVisitor {
 
       // Used in methods, parameters, or variables. Needs derived SymbolData
       case ST_CLASS_VAR:
-        System.out.println(n.f0 + " is class var");
+        System.out.println(n.f0 + " is class var of type " + deepInheritedType.getDeepType());
+        deepInheritedType = null; // Reset deep type 
         break;
 
       // ClassDeclaration or MainClass
