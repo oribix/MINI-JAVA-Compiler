@@ -7,6 +7,8 @@ class Main {
 class A {
 	public int run() {
 		int x;
+		int[] y;
+		boolean z;
 		x = 1;
 		return x;
 	}

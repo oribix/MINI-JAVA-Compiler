@@ -20,24 +20,33 @@ public class Scope{
 
     // Error check: no doubles of an identifier in relevant scope
     switch (type) {
-      case ST_CLASS:
+      case ST_BOOLEAN:      // For now, just do ST_STRING_ARR code. Change if needed.
+      case ST_INT:          
+      case ST_INT_ARR:
+      case ST_STRING_ARR:
+        if (scopeVariables.containsKey(symbol))
+          System.err.println("error: variable \"" + n + "\" not distinct");
+        else
+          scopeClasses.put(symbol, sd);
+        
+        break;
 
+      case ST_CLASS_EXTENDS: // For now, just do ST_CLASS code. Change if needed.
+      case ST_CLASS:
         if (scopeClasses.containsKey(symbol))
           System.err.println("error: class \"" + n + "\" not distinct");
         else
           scopeClasses.put(symbol, sd);
-
-        for (Symbol s : scopeClasses.keySet())
-          System.out.println("in scope: " + s);
+          
         break;
 
       default:
-        //System.out.println("Error check for scope not implemented yet.");
+        System.out.println("Error check for scope not implemented yet.");
     }
 
 
     // Debugging
-    System.out.println(n + ": " + type);
+    System.out.println("pushed " + n + ": " + type + " into scope");
   }
 
   public SymbolData getSymbolData(NodeToken n, SymbolType type) {
