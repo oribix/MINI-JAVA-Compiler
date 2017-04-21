@@ -193,15 +193,18 @@ public class DMVisitor extends DepthFirstVisitor {
   //  n.f1.accept(this);
   //}
 
-  ///**
-  // * f0 -> ArrayType()
-  // *       | BooleanType()
-  // *       | IntegerType()
-  // *       | Identifier()
-  // */
-  //public void visit(Type n) {
-  //  n.f0.accept(this);
-  //}
+  /**
+   * f0 -> ArrayType()
+   *       | BooleanType()
+   *       | IntegerType()
+   *       | Identifier()
+   */
+  public void visit(Type n) {
+    n.f0.accept(this);
+
+    if (inheritedType == SymbolType.ST_NULL)
+      inheritedType = SymbolType.ST_CLASS_VAR;
+  }
 
   /**
    * f0 -> "int"
@@ -537,6 +540,11 @@ public class DMVisitor extends DepthFirstVisitor {
 
         currScope.addSymbol(n.f0, inheritedType);
 
+        break;
+
+      // Used in methods, parameters, or variables. Needs derived SymbolData
+      case ST_CLASS_VAR:
+        System.out.println(n.f0 + " is class var");
         break;
 
       // ClassDeclaration or MainClass
