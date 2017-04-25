@@ -4,9 +4,10 @@ import java.util.HashMap;
 
 //Wrapper for Hashmap which implements a scope
 public class Scope{
-  private HashMap<Symbol, SymbolData> scopeClasses,
-      scopeMethods,
-      scopeVariables;
+  private HashMap<Symbol, SymbolData>
+    scopeClasses,
+    scopeMethods,
+    scopeVariables;
 
   Scope(){
     scopeClasses = new HashMap<Symbol, SymbolData>();
@@ -21,20 +22,18 @@ public class Scope{
     // Error check: no doubles of an identifier in relevant scope
     HashMap<Symbol, SymbolData> scope = null;
     switch (type) {
-      case ST_NULL:
-        return;
-
       case ST_INT:
+      case ST_INT_ARR:
+      case ST_BOOLEAN:      // For now, just do ST_STRING_ARR code. Change if needed.
+      case ST_STRING_ARR:
         scope = scopeVariables;
+      break;
 
       case ST_METHOD:
         scope = scopeMethods;
       break;
 
       case ST_CLASS:
-        scope = scopeClasses;
-      break;
-
       case ST_CLASS_EXTENDS:
         scope = scopeClasses;
       break;
@@ -42,7 +41,6 @@ public class Scope{
       default:
         System.out.println("Error check for scope not implemented yet.");
     }
-
 
     if (scope.containsKey(symbol))
       System.err.println("error: class \"" + n + "\" not distinct");
@@ -53,7 +51,7 @@ public class Scope{
       System.out.println("in scope: " + s);
 
     // Debugging
-    System.out.println(n + ": " + type);
+    System.out.println("pushed " + n + ": " + type + " into scope");
   }
 
   public SymbolData getSymbolData(NodeToken n, SymbolType type) {
