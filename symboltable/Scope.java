@@ -19,22 +19,38 @@ public class Scope{
     SymbolData sd = new SymbolData(type);
 
     // Error check: no doubles of an identifier in relevant scope
+    HashMap<Symbol, SymbolData> scope = null;
     switch (type) {
+      case ST_NULL:
+        return;
+
+      case ST_INT:
+        scope = scopeVariables;
+
+      case ST_METHOD:
+        scope = scopeMethods;
+      break;
+
       case ST_CLASS:
+        scope = scopeClasses;
+      break;
 
-        if (scopeClasses.containsKey(symbol))
-          System.err.println("error: class \"" + n + "\" not distinct");
-        else
-          scopeClasses.put(symbol, sd);
-
-        for (Symbol s : scopeClasses.keySet())
-          System.out.println("in scope: " + s);
-        break;
+      case ST_CLASS_EXTENDS:
+        scope = scopeClasses;
+      break;
 
       default:
-        //System.out.println("Error check for scope not implemented yet.");
+        System.out.println("Error check for scope not implemented yet.");
     }
 
+
+    if (scope.containsKey(symbol))
+      System.err.println("error: class \"" + n + "\" not distinct");
+    else
+      scope.put(symbol, sd);
+
+    for (Symbol s : scope.keySet())
+      System.out.println("in scope: " + s);
 
     // Debugging
     System.out.println(n + ": " + type);
