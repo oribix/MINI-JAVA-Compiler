@@ -1,6 +1,6 @@
-all: clean Typecheck
+all: clean Typecheck.class
 
-run: clean Typecheck
+run: clean Typecheck.class
 	java Typecheck < tests/Phase1Tester/SelfTestCases/Basic.java
 
 Typecheck.class: Typecheck.java visitor/DMVisitor.class

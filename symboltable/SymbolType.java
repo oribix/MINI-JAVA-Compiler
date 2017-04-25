@@ -10,6 +10,5 @@ public enum SymbolType {
   ST_METHOD,
   ST_CLASS,
   ST_CLASS_EXTENDS,
-  ST_METHOD
 };
 
