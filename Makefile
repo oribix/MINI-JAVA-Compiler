@@ -1,7 +1,7 @@
 all: clean Typecheck.class
 
 run: clean Typecheck.class
-	java Typecheck < tests/Phase1Tester/SelfTestCases/Basic.java
+	java Typecheck < tests/phase1-tests/Basic.java
 
 Typecheck.class: Typecheck.java visitor/DMVisitor.class
 	javac Typecheck.java
