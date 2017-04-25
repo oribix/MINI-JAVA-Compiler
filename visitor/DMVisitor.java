@@ -532,9 +532,16 @@ public class DMVisitor extends DepthFirstVisitor {
     Scope currScope = null;
     switch (inheritedType) {
 
-      // NEXT TIME: Be sure to check that declared class exists (or backpatch), put in symbol table, do with methods
+      // If inheritedType is null but we're declaring a type, it must be a special class declaration
       case ST_NULL:
         if (declaringType) {
+          // NEXT TIME: Be sure to check that declared class exists (or backpatch), put in symbol table, do with methods
+
+          // To typecheck Class variables
+          // Put below code into special function for type checking (that maintains backpatch list?)
+          currScope = symbolTable.getGlobalScope();
+          currScope.PrintAll();
+
           inheritedType = SymbolType.ST_CLASS_VAR;
           deepInheritedType = new ClassVarData(n.f0);
         }

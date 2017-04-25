@@ -62,4 +62,16 @@ public class Scope{
     }
   }
 
+  // Debugging code
+  public void PrintAll() {
+    System.out.println("Classes:");
+    for (Symbol s : scopeClasses.keySet())
+      System.out.println(s);
+    System.out.println("Methods:");
+    for (Symbol s : scopeMethods.keySet())
+      System.out.println(s);
+    System.out.println("Variables:");
+    for (Symbol s : scopeVariables.keySet())
+      System.out.println(s);
+  }
 }
