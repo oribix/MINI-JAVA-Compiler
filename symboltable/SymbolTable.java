@@ -33,6 +33,15 @@ public class SymbolTable{
     return currScope;
   }
 
+  public Scope getGlobalScope() {
+    Scope globalScope = scopeStack.getLast();
+
+    if(globalScope == null)
+      System.out.println("error: scope is null!");
+
+    return globalScope;
+  }
+
   //returns Symbol Data of the node passed in if it exists in the Symbol table
   //else null
   public SymbolData getSymbolData(NodeToken n, SymbolType st){
