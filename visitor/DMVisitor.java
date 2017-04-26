@@ -99,11 +99,13 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     inheritedType = SymbolType.ST_CLASS;  // Pass type "class" to identifier
     n.f1.accept(this);
+    symbolTable.newScope();
     //inheritedType = SymbolType.ST_NULL;   // Remove inherited value
     n.f2.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
     n.f5.accept(this);
+    symbolTable.exitScope();
   }
 
   /**
@@ -123,10 +125,12 @@ public class DMVisitor extends DepthFirstVisitor {
     //inheritedType = SymbolType.ST_NULL;           // Remove inherited value
     n.f2.accept(this);
     n.f3.accept(this);
+    symbolTable.newScope();
     n.f4.accept(this);
     n.f5.accept(this);
     n.f6.accept(this);
     n.f7.accept(this);
+    symbolTable.exitScope();
   }
 
   /**
@@ -532,7 +536,6 @@ public class DMVisitor extends DepthFirstVisitor {
      *
      * If not a declaration, identifier is a variable access?? (Check later)
      */
-    Scope currScope = null;
     switch (inheritedType) {
 
       // If inheritedType is null but we're declaring a type, it must be a special class declaration
@@ -542,7 +545,7 @@ public class DMVisitor extends DepthFirstVisitor {
 
           // To typecheck Class variables
           // Put below code into special function for type checking (that maintains backpatch list?)
-          currScope = symbolTable.getGlobalScope();
+          Scope currScope = symbolTable.getGlobalScope();
           currScope.PrintAll();
 
           inheritedType = SymbolType.ST_CLASS_VAR;
@@ -552,47 +555,31 @@ public class DMVisitor extends DepthFirstVisitor {
 
       // Used in methods, parameters, or variables. Same action as String[]
       case ST_BOOLEAN:
-      case ST_INT:  
-      case ST_INT_ARR:  
+      case ST_INT:
+      case ST_INT_ARR:
 
       // Called only as parameter of function main
       case ST_STRING_ARR:
-        currScope = symbolTable.getCurrentScope();
-
-        if (currScope == null)
-          System.err.println("error: no scope!");
-
-        currScope.addSymbol(n.f0, inheritedType);
-
+        symbolTable.addSymbol(n.f0, inheritedType);
         break;
 
       // Used in methods, parameters, or variables. Needs derived SymbolData
       case ST_CLASS_VAR:
         System.out.println(n.f0 + " is class var of type " + deepInheritedType.getDeepType());
-        deepInheritedType = null; // Reset deep type 
+        deepInheritedType = null; // Reset deep type
         break;
 
       // ClassDeclaration or MainClass
       case ST_CLASS:
-        currScope = symbolTable.getCurrentScope();
-
-        if (currScope == null)
-          System.err.println("error: no scope!");
-
-        currScope.addSymbol(n.f0, inheritedType);
+        symbolTable.addSymbol(n.f0, inheritedType);
 
         break;
 
       // ClassExtendsDeclaration
       case ST_CLASS_EXTENDS:
-        currScope = symbolTable.getCurrentScope();
-
-        if (currScope == null)
-          System.err.println("error: no scope!");
-
-        currScope.addSymbol(n.f0, inheritedType);
-
+        symbolTable.addSymbol(n.f0, inheritedType);
         break;
+
       default:
         System.err.println("error: unexpected case in Identifier for " + n.f0);
     }

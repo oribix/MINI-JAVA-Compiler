@@ -49,8 +49,8 @@ public class Scope{
     else
       scope.put(symbol, sd);
 
-    for (Symbol s : scope.keySet())
-      System.out.println("in scope: " + s);
+    //for (Symbol s : scope.keySet())
+    //  System.out.println("in scope: " + s);
 
     // Debugging
     System.out.println("pushed " + n + ": " + type + " into scope");
