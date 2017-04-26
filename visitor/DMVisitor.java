@@ -54,26 +54,29 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     inheritedType = SymbolType.ST_CLASS;  // Pass type "class" to identifier
     n.f1.accept(this);
-    inheritedType = SymbolType.ST_NULL;   // Remove inherited value
+    //inheritedType = SymbolType.ST_NULL;   // Remove inherited value
     n.f2.accept(this);
-    symbolTable.newScope(); // Variables inside function main
+    symbolTable.newScope(); //scope: class
     n.f3.accept(this);
     n.f4.accept(this);
     n.f5.accept(this);
     n.f6.accept(this);
+    symbolTable.newScope();//scope: main
     n.f7.accept(this);
     n.f8.accept(this);
     n.f9.accept(this);
     n.f10.accept(this);
     inheritedType = SymbolType.ST_STRING_ARR; // Pass type "String[]" to identifier
     n.f11.accept(this);
-    inheritedType = SymbolType.ST_NULL;       // Remove inherited value
+    //inheritedType = SymbolType.ST_NULL;       // Remove inherited value
     n.f12.accept(this);
     n.f13.accept(this);
     n.f14.accept(this);
     n.f15.accept(this);
     n.f16.accept(this);
+    symbolTable.exitScope();
     n.f17.accept(this);
+    symbolTable.exitScope();
   }
 
   ///**
@@ -96,7 +99,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     inheritedType = SymbolType.ST_CLASS;  // Pass type "class" to identifier
     n.f1.accept(this);
-    inheritedType = SymbolType.ST_NULL;   // Remove inherited value
+    //inheritedType = SymbolType.ST_NULL;   // Remove inherited value
     n.f2.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
@@ -117,7 +120,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     inheritedType = SymbolType.ST_CLASS_EXTENDS;  // Pass type "class extends" to identifier
     n.f1.accept(this);
-    inheritedType = SymbolType.ST_NULL;           // Remove inherited value
+    //inheritedType = SymbolType.ST_NULL;           // Remove inherited value
     n.f2.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
@@ -134,7 +137,7 @@ public class DMVisitor extends DepthFirstVisitor {
   public void visit(VarDeclaration n) {
     n.f0.accept(this);  // inheritedValue is set by Type()
     n.f1.accept(this);
-    inheritedType = SymbolType.ST_NULL; // Remove inherited value
+    //inheritedType = SymbolType.ST_NULL; // Remove inherited value
     n.f2.accept(this);
   }
 
@@ -158,7 +161,7 @@ public class DMVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_METHOD; // Do not use type Type() for symbol table
     n.f1.accept(this);
     n.f2.accept(this);
-    inheritedType = SymbolType.ST_NULL;   // Reset type
+    //inheritedType = SymbolType.ST_NULL;   // Reset type
     n.f1.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
@@ -593,6 +596,9 @@ public class DMVisitor extends DepthFirstVisitor {
       default:
         System.err.println("error: unexpected case in Identifier for " + n.f0);
     }
+
+    if(inheritedType != SymbolType.ST_NULL && !declaringType)
+      inheritedType = SymbolType.ST_NULL;
   }
 
   ///**

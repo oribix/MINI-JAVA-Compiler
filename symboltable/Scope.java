@@ -4,9 +4,11 @@ import java.util.HashMap;
 
 //Wrapper for Hashmap which implements a scope
 public class Scope{
-  private HashMap<Symbol, SymbolData>
+  protected HashMap<Symbol, SymbolData>
     scopeClasses,
-    scopeMethods,
+    scopeMethods;
+
+  private HashMap<Symbol, SymbolData>
     scopeVariables;
 
   Scope(){

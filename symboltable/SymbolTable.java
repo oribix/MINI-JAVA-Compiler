@@ -7,6 +7,7 @@ public class SymbolTable{
   //stack of scopes implemented with ArrayDeque
   //This is the main Data structure for the SymbolTable
   private ArrayDeque<Scope> scopeStack;
+  private ClassRefChecker crc;
 
   //Symbol Table Constructor
   public SymbolTable(){
