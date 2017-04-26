@@ -565,6 +565,10 @@ public class DMVisitor extends DepthFirstVisitor {
 
       // Used in methods, parameters, or variables. Needs derived SymbolData
       case ST_CLASS_VAR:
+        // Note: These are not "type checked" by the ClassRefChecker class yet. Working on it.
+        symbolTable.addSymbol(n.f0, inheritedType);
+        // Need to edit symbol table to use deep inherited type
+
         System.out.println(n.f0 + " is class var of type " + deepInheritedType.getDeepType());
         deepInheritedType = null; // Reset deep type
         break;
