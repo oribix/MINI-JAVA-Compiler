@@ -9,6 +9,8 @@ public class DMVisitor extends DepthFirstVisitor {
   SymbolType inheritedType;
   SymbolData deepInheritedType;
 
+  private NodeToken cn;
+
   public DMVisitor(){
     symbolTable = new SymbolTable();
     inheritedType = SymbolType.ST_NULL;
@@ -27,22 +29,80 @@ public class DMVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_NULL;
   }
 
+  //gets the inherited type then resets it
   SymbolType getInheritedType(){
     SymbolType it = inheritedType;
     inheritedType = SymbolType.ST_NULL;
     return it;
   }
 
-  ///**
-  // * f0 -> MainClass()
-  // * f1 -> ( TypeDeclaration() )*
-  // * f2 -> <EOF>
-  // */
-  //public void visit(Goal n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //}
+  //suggested helper functions
+
+  //returns class's name
+  String classname(MainClass mc){
+    return mc.f1.f0.toString();
+  }
+
+  String classname(ClassDeclaration cd){
+    return cd.f1.f0.toString();
+  }
+
+  String classname(ClassExtendsDeclaration ced){
+    return ced.f1.f0.toString();
+  }
+
+  //returns a method's name
+  String methodname(MethodDeclaration md){
+    return md.f2.f0.toString();
+  }
+
+  boolean distinct(ArrayList<String> idList){
+    HashSet hs = new HashSet<String>(idList);
+    if(hs.size() < idList.size()){
+      System.out.println("Error: non-Distinct");
+      return false;
+    }
+    else{
+      System.out.println("Distinct :D");
+      return true;
+    }
+  }
+
+  /**
+   * f0 -> MainClass()
+   * f1 -> ( TypeDeclaration() )*
+   * f2 -> <EOF>
+   */
+  public void visit(Goal n) {
+    ArrayList<String> classnames = new ArrayList<String>();
+    classnames.add(classname(n.f0));
+    //add all classnames in TypeDeclaration* to list
+    for(Node typeDeclaration : n.f1.nodes){
+      TypeDeclaration td = (TypeDeclaration)typeDeclaration;
+      Node choice = td.f0.choice;
+      int which = td.f0.which;
+      if(which == 0){//ClassDeclaration
+        classnames.add(classname((ClassDeclaration)choice));
+      }
+      else{//ClassExtendsDeclaration
+        classnames.add(classname((ClassExtendsDeclaration)choice));
+      }
+    }
+
+    System.out.println("Class Names:");
+    for(String cn : classnames){
+      System.out.println(cn);
+    }
+    System.out.println();
+
+    if(!distinct(classnames)){
+      System.exit(-1);
+    }
+
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+  }
 
   /**
    * f0 -> "class"
@@ -68,6 +128,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
+    cn = n.f1.f0;
     symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS);
 
     //enter new scope for class
@@ -132,6 +193,18 @@ public class DMVisitor extends DepthFirstVisitor {
     symbolTable.newScope();
 
     n.f3.accept(this);
+
+    ArrayList<String> methodNames = new ArrayList<String>();
+    for(Node node : n.f4.nodes){
+      methodNames.add(methodname((MethodDeclaration)node));
+    }
+
+    System.out.println("method names:");
+    for(String s : methodNames){
+      System.out.println(s);
+    }
+    System.out.println();
+
     n.f4.accept(this);
 
     //exit class scope
@@ -325,7 +398,11 @@ public class DMVisitor extends DepthFirstVisitor {
 
     //lhs
     n.f0.accept(this);
-    lhs = symbolTable.getSymbolData(n.f0.f0, SymbolType.ST_VARIABLE).getType();
+    SymbolData sd = symbolTable.getSymbolData(n.f0.f0, SymbolType.ST_VARIABLE);
+    if(sd == null){
+      System.out.println("Symbol " + n.f0.f0.toString() + " does not exist");
+      System.exit(-1);
+    }
 
     n.f1.accept(this);
 
@@ -541,10 +618,14 @@ public class DMVisitor extends DepthFirstVisitor {
   public void visit(ArrayLookup n) {
     n.f0.accept(this);
     typeCheck(SymbolType.ST_INT_ARR);
+
     n.f1.accept(this);
     n.f2.accept(this);
     n.f3.accept(this);
     typeCheck(SymbolType.ST_INT);
+
+    //<ArrayLookup> = ST_INT
+    inheritedType = SymbolType.ST_INT;
   }
 
   /**
@@ -557,6 +638,9 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f2.accept(this);
     typeCheck(SymbolType.ST_INT_ARR);
+
+    //<ArrayLength> = ST_INT
+    inheritedType = SymbolType.ST_INT;
   }
 
   ///**
@@ -614,8 +698,9 @@ public class DMVisitor extends DepthFirstVisitor {
    */
   public void visit(IntegerLiteral n) {
     n.f0.accept(this);
+
+    //<IntegerLiteral> = ST_INT
     inheritedType = SymbolType.ST_INT;
-    System.out.println("Integer Literal: " + n.f0);
   }
 
   /**
@@ -623,8 +708,9 @@ public class DMVisitor extends DepthFirstVisitor {
    */
   public void visit(TrueLiteral n) {
     n.f0.accept(this);
+
+    //<TrueLiteral> = ST_BOOLEAN
     inheritedType = SymbolType.ST_BOOLEAN;
-    System.out.println("True Literal: " + n.f0);
   }
 
   /**
@@ -632,8 +718,9 @@ public class DMVisitor extends DepthFirstVisitor {
    */
   public void visit(FalseLiteral n) {
     n.f0.accept(this);
+
+    //<FalseLiteral> = ST_BOOLEAN
     inheritedType = SymbolType.ST_BOOLEAN;
-    System.out.println("False Literal: " + n.f0);
   }
 
   /**
@@ -641,10 +728,10 @@ public class DMVisitor extends DepthFirstVisitor {
    */
   public void visit(Identifier n) {
     n.f0.accept(this);
-    
+
     //inheritedType = SymbolType.ST_CLASS_VAR;
     //deepInheritedType = new ClassVarData(n.f0);
-    
+
     //ST_CLASS_VAR
     //System.out.println(n.f0 + " is class var of type " + deepInheritedType.getDeepType());
     //deepInheritedType = null; // Reset deep type
@@ -660,20 +747,24 @@ public class DMVisitor extends DepthFirstVisitor {
   //  n.f0.accept(this);
   //}
 
-  ///**
-  // * f0 -> "new"
-  // * f1 -> "int"
-  // * f2 -> "["
-  // * f3 -> Expression()
-  // * f4 -> "]"
-  // */
-  //public void visit(ArrayAllocationExpression n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //}
+  /**
+   * f0 -> "new"
+   * f1 -> "int"
+   * f2 -> "["
+   * f3 -> Expression()
+   * f4 -> "]"
+   */
+  public void visit(ArrayAllocationExpression n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+    n.f3.accept(this);
+    n.f4.accept(this);
+    typeCheck(SymbolType.ST_INT);
+
+    //<ArrayAllocationExpression> = ST_INT
+    inheritedType = SymbolType.ST_INT_ARR;
+  }
 
   ///**
   // * f0 -> "new"
@@ -695,6 +786,10 @@ public class DMVisitor extends DepthFirstVisitor {
   public void visit(NotExpression n) {
     n.f0.accept(this);
     n.f1.accept(this);
+    typeCheck(SymbolType.ST_BOOLEAN);
+
+    //<NotExpression> = ST_BOOLEAN
+    inheritedType = SymbolType.ST_BOOLEAN;
   }
 
   ///**
