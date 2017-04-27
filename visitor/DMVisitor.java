@@ -6,6 +6,7 @@ import java.util.*;
 public class DMVisitor extends DepthFirstVisitor {
 
   SymbolTable symbolTable;
+  ClassRefChecker classRefChecker;
   SymbolType inheritedType;
   SymbolData deepInheritedType;
 
@@ -13,22 +14,25 @@ public class DMVisitor extends DepthFirstVisitor {
 
   public DMVisitor(){
     symbolTable = new SymbolTable();
+    classRefChecker = new ClassRefChecker();
     inheritedType = SymbolType.ST_NULL;
     deepInheritedType = null;
 
     declaringType = false;
   }
 
-  ///**
-  // * f0 -> MainClass()
-  // * f1 -> ( TypeDeclaration() )*
-  // * f2 -> <EOF>
-  // */
-  //public void visit(Goal n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //}
+  /**
+   * f0 -> MainClass()
+   * f1 -> ( TypeDeclaration() )*
+   * f2 -> <EOF>
+   */
+  public void visit(Goal n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+
+    classRefChecker.checkClassesExisted();
+  }
 
   /**
    * f0 -> "class"
@@ -543,10 +547,17 @@ public class DMVisitor extends DepthFirstVisitor {
         if (declaringType) {
           // NEXT TIME: Be sure to check that declared class exists (or backpatch), put in symbol table, do with methods
 
+          // NEXT TIME: test classRefChecker verify by putting output statement in function
           // To typecheck Class variables
           // Put below code into special function for type checking (that maintains backpatch list?)
-          Scope currScope = symbolTable.getGlobalScope();
-          currScope.PrintAll();
+          if (!symbolTable.classExists(n.f0)) {
+            classRefChecker.verifyClassExists(n.f0);
+
+            //Scope currScope = symbolTable.getGlobalScope();
+            //currScope.PrintAll();
+
+            //System.out.println("Class exists: " + symbolTable.classExists(n.f0));
+          }
 
           inheritedType = SymbolType.ST_CLASS_VAR;
           deepInheritedType = new ClassVarData(n.f0);
@@ -566,7 +577,7 @@ public class DMVisitor extends DepthFirstVisitor {
       // Used in methods, parameters, or variables. Needs derived SymbolData
       case ST_CLASS_VAR:
         // Note: These are not "type checked" by the ClassRefChecker class yet. Working on it.
-        symbolTable.addSymbol(n.f0, inheritedType);
+        //symbolTable.addSymbol(n.f0, inheritedType);
         // Need to edit symbol table to use deep inherited type
 
         System.out.println(n.f0 + " is class var of type " + deepInheritedType.getDeepType());
@@ -576,12 +587,13 @@ public class DMVisitor extends DepthFirstVisitor {
       // ClassDeclaration or MainClass
       case ST_CLASS:
         symbolTable.addSymbol(n.f0, inheritedType);
-
+        classRefChecker.notifyClassExists(n.f0);
         break;
 
       // ClassExtendsDeclaration
       case ST_CLASS_EXTENDS:
         symbolTable.addSymbol(n.f0, inheritedType);
+        classRefChecker.notifyClassExists(n.f0);
         break;
 
       default:

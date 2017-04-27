@@ -58,4 +58,11 @@ public class SymbolTable{
     Scope scope = getCurrentScope();
     scope.addSymbol(n, type);
   }
+
+  public boolean classExists(NodeToken n) {
+    if (getGlobalScope().getSymbolData(n, SymbolType.ST_CLASS) != null)
+      return true;
+
+    return getGlobalScope().getSymbolData(n, SymbolType.ST_CLASS_EXTENDS) != null;
+  }
 }
