@@ -42,7 +42,7 @@ public class Scope{
       break;
 
       default:
-        System.out.println("Error: case not implemented yet.");
+        System.out.println("Error: case " + type + " not implemented yet.");
         System.out.println("\nADD CASE TO Scope.Java PLEASE!\n");
     }
 

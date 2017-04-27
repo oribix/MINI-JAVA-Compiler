@@ -9,14 +9,11 @@ public class DMVisitor extends DepthFirstVisitor {
   SymbolType inheritedType;
   SymbolData deepInheritedType;
 
-  boolean declaringType;
-
   public DMVisitor(){
     symbolTable = new SymbolTable();
     inheritedType = SymbolType.ST_NULL;
     deepInheritedType = null;
 
-    declaringType = false;
   }
 
   //makes sure inheritedType is of type st
@@ -68,28 +65,42 @@ public class DMVisitor extends DepthFirstVisitor {
    * f17 -> "}"
    */
   public void visit(MainClass n) {
+    //add class to symbol table
     n.f0.accept(this);
-    inheritedType = SymbolType.ST_CLASS;  // Pass type "class" to identifier
     n.f1.accept(this);
+    symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS);
+
+    //enter new scope for class
     n.f2.accept(this);
-    symbolTable.newScope(); //scope: class
+    symbolTable.newScope();
+
+    //todo: add main to function scope?
     n.f3.accept(this);
     n.f4.accept(this);
     n.f5.accept(this);
     n.f6.accept(this);
-    symbolTable.newScope();//scope: main
+
+    //enter new scope for main
     n.f7.accept(this);
+    symbolTable.newScope();//scope: main
+
+    //add String[] id to symbol table
     n.f8.accept(this);
     n.f9.accept(this);
     n.f10.accept(this);
-    inheritedType = SymbolType.ST_STRING_ARR; // Pass type "String[]" to identifier
     n.f11.accept(this);
+    symbolTable.addSymbol(n.f11.f0, SymbolType.ST_STRING_ARR);
+
     n.f12.accept(this);
     n.f13.accept(this);
     n.f14.accept(this);
     n.f15.accept(this);
+
+    //exit main scope
     n.f16.accept(this);
     symbolTable.exitScope();
+
+    //exit class scope
     n.f17.accept(this);
     symbolTable.exitScope();
   }
@@ -111,13 +122,19 @@ public class DMVisitor extends DepthFirstVisitor {
    * f5 -> "}"
    */
   public void visit(ClassDeclaration n) {
+    //add class to symbol table
     n.f0.accept(this);
-    inheritedType = SymbolType.ST_CLASS;  // Pass type "class" to identifier
     n.f1.accept(this);
-    symbolTable.newScope();
+    symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS);
+
+    //enter class scope
     n.f2.accept(this);
+    symbolTable.newScope();
+
     n.f3.accept(this);
     n.f4.accept(this);
+
+    //exit class scope
     n.f5.accept(this);
     symbolTable.exitScope();
   }
@@ -133,16 +150,22 @@ public class DMVisitor extends DepthFirstVisitor {
    * f7 -> "}"
    */
   public void visit(ClassExtendsDeclaration n) {
+    //add class to symbol table
     n.f0.accept(this);
-    inheritedType = SymbolType.ST_CLASS_EXTENDS;  // Pass type "class extends" to identifier
     n.f1.accept(this);
-    //inheritedType = SymbolType.ST_NULL;           // Remove inherited value
+    symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS_EXTENDS);
+
     n.f2.accept(this);
     n.f3.accept(this);
-    symbolTable.newScope();
+
+    //enter class scope
     n.f4.accept(this);
+    symbolTable.newScope();
+
     n.f5.accept(this);
     n.f6.accept(this);
+
+    //exit class scope
     n.f7.accept(this);
     symbolTable.exitScope();
   }
@@ -153,10 +176,14 @@ public class DMVisitor extends DepthFirstVisitor {
    * f2 -> ";"
    */
   public void visit(VarDeclaration n) {
-    n.f0.accept(this);  // inheritedValue is set by Type()
+    n.f0.accept(this);
     n.f1.accept(this);
-    //inheritedType = SymbolType.ST_NULL; // Remove inherited value
     n.f2.accept(this);
+
+    SymbolType st = getInheritedType();
+    if(st == SymbolType.ST_CLASS)
+      st = SymbolType.ST_CLASS_VAR;
+    symbolTable.addSymbol(n.f1.f0, st);
   }
 
   /**
@@ -175,11 +202,12 @@ public class DMVisitor extends DepthFirstVisitor {
    * f12 -> "}"
    */
   public void visit(MethodDeclaration n) {
+    //add method to symbol table
     n.f0.accept(this);
-    inheritedType = SymbolType.ST_METHOD; // Do not use type Type() for symbol table
     n.f1.accept(this);
     n.f2.accept(this);
-    //inheritedType = SymbolType.ST_NULL;   // Reset type
+    symbolTable.addSymbol(n.f2.f0, SymbolType.ST_METHOD);
+
     n.f1.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
@@ -227,9 +255,10 @@ public class DMVisitor extends DepthFirstVisitor {
    *       | Identifier()
    */
   public void visit(Type n) {
-    declaringType = true; // Used by Identifier if declaration is type CLASS_VAR
     n.f0.accept(this);
-    declaringType = false;
+    if(n.f0.which == 3){//if we chose Identifier()
+      inheritedType = SymbolType.ST_CLASS;
+    }
   }
 
   /**
@@ -241,10 +270,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     n.f1.accept(this);
     n.f2.accept(this);
-
-    // If type is method, then array is return type of method
-    if (inheritedType != SymbolType.ST_METHOD)
-      inheritedType = SymbolType.ST_INT_ARR;
+    inheritedType = SymbolType.ST_INT_ARR;
   }
 
   /**
@@ -252,22 +278,15 @@ public class DMVisitor extends DepthFirstVisitor {
    */
   public void visit(BooleanType n) {
     n.f0.accept(this);
-
-    // If type is method, then boolean is return type of method
-    if (inheritedType != SymbolType.ST_METHOD)
-      inheritedType = SymbolType.ST_BOOLEAN;
+    inheritedType = SymbolType.ST_BOOLEAN;
   }
 
   /**
    * f0 -> "int"
    */
   public void visit(IntegerType n) {
-    //System.out.println(n.f0);
     n.f0.accept(this);
-
-    // If type is method, then integer is return type of method
-    if (inheritedType != SymbolType.ST_METHOD)
-      inheritedType = SymbolType.ST_INT;
+    inheritedType = SymbolType.ST_INT;
   }
 
   /**
@@ -330,11 +349,8 @@ public class DMVisitor extends DepthFirstVisitor {
   public void visit(ArrayAssignmentStatement n) {
     //array id
     n.f0.accept(this);
-    SymbolType st = symbolTable.getSymbolData(n.f0.f0, SymbolType.ST_VARIABLE).getType();
-    if(st != SymbolType.ST_INT_ARR){
-      System.out.println("Error: Symbol " + n.f0.f0 + "not an Int Array");
-      System.exit(-1);
-    }
+    inheritedType = symbolTable.getSymbolData(n.f0.f0, SymbolType.ST_VARIABLE).getType();
+    typeCheck(SymbolType.ST_INT_ARR);
 
     //array index
     n.f1.accept(this);
@@ -412,8 +428,8 @@ public class DMVisitor extends DepthFirstVisitor {
    *       | PrimaryExpression()
    */
   public void visit(Expression n) {
-    System.out.println("Expression Evaluated");
     n.f0.accept(this);
+    System.out.println("Expression Evaluated");
   }
 
   /**
@@ -452,8 +468,8 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f2.accept(this);
     typeCheck(SymbolType.ST_INT);
 
-    //<CompareExpression> = ST_INT
-    inheritedType = SymbolType.ST_INT;
+    //<CompareExpression> = ST_BOOLEAN
+    inheritedType = SymbolType.ST_BOOLEAN;
   }
 
   /**
@@ -516,29 +532,32 @@ public class DMVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_INT;
   }
 
-  ///**
-  // * f0 -> PrimaryExpression()
-  // * f1 -> "["
-  // * f2 -> PrimaryExpression()
-  // * f3 -> "]"
-  // */
-  //public void visit(ArrayLookup n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //}
+  /**
+   * f0 -> PrimaryExpression()
+   * f1 -> "["
+   * f2 -> PrimaryExpression()
+   * f3 -> "]"
+   */
+  public void visit(ArrayLookup n) {
+    n.f0.accept(this);
+    typeCheck(SymbolType.ST_INT_ARR);
+    n.f1.accept(this);
+    n.f2.accept(this);
+    n.f3.accept(this);
+    typeCheck(SymbolType.ST_INT);
+  }
 
-  ///**
-  // * f0 -> PrimaryExpression()
-  // * f1 -> "."
-  // * f2 -> "length"
-  // */
-  //public void visit(ArrayLength n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //}
+  /**
+   * f0 -> PrimaryExpression()
+   * f1 -> "."
+   * f2 -> "length"
+   */
+  public void visit(ArrayLength n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+    typeCheck(SymbolType.ST_INT_ARR);
+  }
 
   ///**
   // * f0 -> PrimaryExpression()
@@ -622,66 +641,16 @@ public class DMVisitor extends DepthFirstVisitor {
    */
   public void visit(Identifier n) {
     n.f0.accept(this);
+    
+    //inheritedType = SymbolType.ST_CLASS_VAR;
+    //deepInheritedType = new ClassVarData(n.f0);
+    
+    //ST_CLASS_VAR
+    //System.out.println(n.f0 + " is class var of type " + deepInheritedType.getDeepType());
+    //deepInheritedType = null; // Reset deep type
 
-    /* Add to symbol table if identifier is a declaration
-     * Each case should include special symbolData (maybe derived classes?)
-     *
-     * If not a declaration, identifier is a variable access?? (Check later)
-     */
-    switch (inheritedType) {
 
-      // If inheritedType is null but we're declaring a type, it must be a special class declaration
-      case ST_NULL:
-        if (declaringType) {
-          // NEXT TIME: Be sure to check that declared class exists (or backpatch), put in symbol table, do with methods
-
-          // To typecheck Class variables
-          // Put below code into special function for type checking (that maintains backpatch list?)
-          Scope currScope = symbolTable.getGlobalScope();
-          currScope.PrintAll();
-
-          inheritedType = SymbolType.ST_CLASS_VAR;
-          deepInheritedType = new ClassVarData(n.f0);
-        }
-        break;
-
-      // Used in methods, parameters, or variables. Same action as String[]
-      case ST_BOOLEAN:
-      case ST_INT:
-      case ST_INT_ARR:
-
-      // Called only as parameter of function main
-      case ST_STRING_ARR:
-        symbolTable.addSymbol(n.f0, inheritedType);
-        break;
-
-      // Used in methods, parameters, or variables. Needs derived SymbolData
-      case ST_CLASS_VAR:
-        // Note: These are not "type checked" by the ClassRefChecker class yet. Working on it.
-        symbolTable.addSymbol(n.f0, inheritedType);
-        // Need to edit symbol table to use deep inherited type
-
-        System.out.println(n.f0 + " is class var of type " + deepInheritedType.getDeepType());
-        deepInheritedType = null; // Reset deep type
-        break;
-
-      // ClassDeclaration or MainClass
-      case ST_CLASS:
-        symbolTable.addSymbol(n.f0, inheritedType);
-
-        break;
-
-      // ClassExtendsDeclaration
-      case ST_CLASS_EXTENDS:
-        symbolTable.addSymbol(n.f0, inheritedType);
-        break;
-
-      default:
-        System.err.println("error: unexpected case in Identifier for " + n.f0);
-    }
-
-    if(inheritedType != SymbolType.ST_NULL && !declaringType)
-      inheritedType = SymbolType.ST_NULL;
+    //inheritedType = SymbolType.ST_NULL;
   }
 
   ///**
