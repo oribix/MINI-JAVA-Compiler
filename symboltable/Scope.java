@@ -76,6 +76,19 @@ public class Scope{
     }
   }
 
+  // Used by SymbolTable for adding methods
+  // Should ONLY be used on global scope. This function fails otherwise.
+  protected void addMethodToClass(NodeToken classToken, MethodData methodData) {
+    if (!scopeClasses.containsKey(new Symbol(classToken))) {
+      System.err.println("error: attempted to add method in non-global scope\n");
+      System.exit(-1);
+    }
+
+    ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+    classData.addMethod(methodData);
+    System.out.println(classToken + "," + classData.getType() + " adds " + methodData.getDeepType());
+  }
+
   // Debugging code
   public void PrintAll() {
     System.out.println("Classes:");

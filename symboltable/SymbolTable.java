@@ -70,4 +70,8 @@ public class SymbolTable{
 
     return getGlobalScope().getSymbolData(n, SymbolType.ST_CLASS_EXTENDS) != null;
   }
+
+  public void addMethodToClass(NodeToken classToken, MethodData methodData) {
+    getGlobalScope().addMethodToClass(classToken, methodData);
+  }
 }

@@ -77,7 +77,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
-    symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS);
+    symbolTable.addSymbol(n.f1.f0, new ClassData(n.f1.f0));
 
     //enter new scope for class
     n.f2.accept(this);
@@ -88,6 +88,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f4.accept(this);
     n.f5.accept(this);
     n.f6.accept(this);
+    symbolTable.addMethodToClass(n.f1.f0, MethodData.mainInstance());
 
     //enter new scope for main
     n.f7.accept(this);
@@ -134,7 +135,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
-    symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS);
+    symbolTable.addSymbol(n.f1.f0, new ClassData(n.f1.f0));
     classRefChecker.notifyClassExists(n.f1.f0);
 
     //enter class scope
