@@ -28,6 +28,7 @@ public class Scope{
       case ST_INT_ARR:
       case ST_BOOLEAN:      // For now, just do ST_STRING_ARR code. Change if needed.
       case ST_STRING_ARR:
+      case ST_CLASS_VAR:
         scope = scopeVariables;
       break;
 
@@ -41,30 +42,33 @@ public class Scope{
       break;
 
       default:
-        System.out.println("Error check for scope not implemented yet.");
+        System.out.println("Error: case " + type + " not implemented yet.");
+        System.out.println("\nADD CASE TO Scope.Java PLEASE!\n");
     }
 
-    if (scope.containsKey(symbol))
+    if (scope.containsKey(symbol)){
       System.err.println("error: class \"" + n + "\" not distinct");
+      System.exit(-1);
+    }
     else
       scope.put(symbol, sd);
 
-    //for (Symbol s : scope.keySet())
-    //  System.out.println("in scope: " + s);
-
     // Debugging
-    System.out.println("pushed " + n + ": " + type + " into scope");
+    System.out.println("pushed \"" + n + ": " + type + "\" into scope");
+    for (Symbol s : scope.keySet())
+      System.out.println("in scope: " + s);
   }
 
   public SymbolData getSymbolData(NodeToken n, SymbolType type) {
     switch (type) {
-      case ST_INT:
-        return null;
+      case ST_VARIABLE:
+        return scopeVariables.get(new Symbol(n));
+      case ST_METHOD:
+        return scopeMethods.get(new Symbol(n));
       case ST_CLASS:
         return scopeClasses.get(new Symbol(n));
-      case ST_CLASS_EXTENDS:
-        return scopeClasses.get(new Symbol(n));
       default:
+        System.out.println("Error: Did not specify SymbolType");
         return null;
     }
   }
