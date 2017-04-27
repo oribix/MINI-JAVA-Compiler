@@ -18,12 +18,15 @@ public class Scope{
   }
 
   public void addSymbol(NodeToken n, SymbolType type){
+    addSymbol(n, new SymbolData(type));
+  }
+
+  public void addSymbol(NodeToken n, SymbolData data){
     Symbol symbol = new Symbol(n);
-    SymbolData sd = new SymbolData(type);
 
     // Error check: no doubles of an identifier in relevant scope
     HashMap<Symbol, SymbolData> scope = null;
-    switch (type) {
+    switch (data.type) {
       case ST_INT:
       case ST_INT_ARR:
       case ST_BOOLEAN:      // For now, just do ST_STRING_ARR code. Change if needed.
@@ -42,7 +45,7 @@ public class Scope{
       break;
 
       default:
-        System.out.println("Error: case " + type + " not implemented yet.");
+        System.out.println("Error: case " + data.type + " not implemented yet.");
         System.out.println("\nADD CASE TO Scope.Java PLEASE!\n");
     }
 
@@ -51,10 +54,10 @@ public class Scope{
       System.exit(-1);
     }
     else
-      scope.put(symbol, sd);
+      scope.put(symbol, data);
 
     // Debugging
-    System.out.println("pushed \"" + n + ": " + type + "\" into scope");
+    System.out.println("pushed \"" + n + ": " + data.type + "," + data.getDeepType() +"\" into scope");
     for (Symbol s : scope.keySet())
       System.out.println("in scope: " + s);
   }

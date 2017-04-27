@@ -34,6 +34,12 @@ public class DMVisitor extends DepthFirstVisitor {
     return it;
   }
 
+  SymbolData getDeepInheritedType() {
+    SymbolData data = deepInheritedType;
+    deepInheritedType = null;
+    return data;
+  }
+
   /**
    * f0 -> MainClass()
    * f1 -> ( TypeDeclaration() )*
@@ -185,11 +191,11 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f2.accept(this);
 
-    // FIX: ClassRefCheck verify here
     SymbolType st = getInheritedType();
     if(st == SymbolType.ST_CLASS)
-      st = SymbolType.ST_CLASS_VAR;
-    symbolTable.addSymbol(n.f1.f0, st);
+      symbolTable.addSymbol(n.f1.f0, getDeepInheritedType());
+    else
+      symbolTable.addSymbol(n.f1.f0, st);
   }
 
   /**
@@ -264,6 +270,12 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     if(n.f0.which == 3){//if we chose Identifier()
       inheritedType = SymbolType.ST_CLASS;
+
+      // If class doesn't exist "yet", put it in backpatch list
+      NodeToken classToken = ((Identifier) n.f0.choice).f0;
+      deepInheritedType = new ClassVarData(classToken);
+      if (!symbolTable.classExists(classToken))
+        classRefChecker.verifyClassExists(classToken);
     }
   }
 

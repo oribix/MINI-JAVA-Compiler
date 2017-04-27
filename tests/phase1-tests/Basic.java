@@ -1,5 +1,5 @@
 class Main {
-	public static void main(String[] a){
+	public static void main(String[] s){
 	  A a;
 		System.out.println(new A().run());
 	}
