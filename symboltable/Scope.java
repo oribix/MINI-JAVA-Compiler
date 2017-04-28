@@ -18,12 +18,15 @@ public class Scope{
   }
 
   public void addSymbol(NodeToken n, SymbolType type){
+    addSymbol(n, new SymbolData(type));
+  }
+
+  public void addSymbol(NodeToken n, SymbolData data){
     Symbol symbol = new Symbol(n);
-    SymbolData sd = new SymbolData(type);
 
     // Error check: no doubles of an identifier in relevant scope
     HashMap<Symbol, SymbolData> scope = null;
-    switch (type) {
+    switch (data.type) {
       case ST_INT:
       case ST_INT_ARR:
       case ST_BOOLEAN:      // For now, just do ST_STRING_ARR code. Change if needed.
@@ -42,7 +45,7 @@ public class Scope{
       break;
 
       default:
-        System.out.println("Error: case " + type + " not implemented yet.");
+        System.out.println("Error: case " + data.type + " not implemented yet.");
         System.out.println("\nADD CASE TO Scope.Java PLEASE!\n");
     }
 
@@ -51,12 +54,12 @@ public class Scope{
       System.exit(-1);
     }
     else
-      scope.put(symbol, sd);
+      scope.put(symbol, data);
 
     // Debugging
-    System.out.println("pushed \"" + n + ": " + type + "\" into scope");
-    for (Symbol s : scope.keySet())
-      System.out.println("in scope: " + s);
+    System.out.println("pushed \"" + n + ": " + data.type + "," + data.getDeepType() +"\" into scope");
+    //for (Symbol s : scope.keySet())
+    //  System.out.println("in scope: " + s);
   }
 
   public SymbolData getSymbolData(NodeToken n, SymbolType type) {
@@ -66,11 +69,25 @@ public class Scope{
       case ST_METHOD:
         return scopeMethods.get(new Symbol(n));
       case ST_CLASS:
+      case ST_CLASS_EXTENDS:
         return scopeClasses.get(new Symbol(n));
       default:
         System.out.println("Error: Did not specify SymbolType");
         return null;
     }
+  }
+
+  // Used by SymbolTable for adding methods
+  // Should ONLY be used on global scope. This function fails otherwise.
+  protected void addMethodToClass(NodeToken classToken, MethodData methodData) {
+    if (!scopeClasses.containsKey(new Symbol(classToken))) {
+      System.err.println("error: attempted to add method in non-global scope\n");
+      System.exit(-1);
+    }
+
+    ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+    classData.addMethod(methodData);
+    System.out.println(classToken + "," + classData.getType() + " adds " + methodData.getDeepType());
   }
 
   // Debugging code

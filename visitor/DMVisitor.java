@@ -6,16 +6,18 @@ import java.util.*;
 public class DMVisitor extends DepthFirstVisitor {
 
   SymbolTable symbolTable;
+  ClassRefChecker classRefChecker;
   SymbolType inheritedType;
   SymbolData deepInheritedType;
-
-  private NodeToken cn;
+  Vector<SymbolData> synthFormalParam; // Used by MethodDeclaration (synthesized from param)
+  NodeToken inheritedClass;            // Used by MethodDeclaration (inherited from classDec)
 
   public DMVisitor(){
     symbolTable = new SymbolTable();
+    classRefChecker = new ClassRefChecker();
     inheritedType = SymbolType.ST_NULL;
     deepInheritedType = null;
-
+    synthFormalParam = new Vector<>();
   }
 
   //makes sure inheritedType is of type st
@@ -34,6 +36,18 @@ public class DMVisitor extends DepthFirstVisitor {
     SymbolType it = inheritedType;
     inheritedType = SymbolType.ST_NULL;
     return it;
+  }
+
+  SymbolData getDeepInheritedType() {
+    SymbolData data = deepInheritedType;
+    deepInheritedType = null;
+    return data;
+  }
+
+  Vector<SymbolData> getSynthFormalParam() {
+    Vector<SymbolData> data = synthFormalParam;
+    synthFormalParam = new Vector<>();
+    return data;
   }
 
   //suggested helper functions
@@ -102,6 +116,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     n.f1.accept(this);
     n.f2.accept(this);
+    classRefChecker.checkClassesExisted();
   }
 
   /**
@@ -128,18 +143,17 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
-    cn = n.f1.f0;
-    symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS);
+    symbolTable.addSymbol(n.f1.f0, new ClassData(n.f1.f0));
 
     //enter new scope for class
     n.f2.accept(this);
     symbolTable.newScope();
 
-    //todo: add main to function scope?
     n.f3.accept(this);
     n.f4.accept(this);
     n.f5.accept(this);
     n.f6.accept(this);
+    symbolTable.addMethodToClass(n.f1.f0, MethodData.mainInstance());
 
     //enter new scope for main
     n.f7.accept(this);
@@ -186,14 +200,14 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
-    symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS);
+    symbolTable.addSymbol(n.f1.f0, new ClassData(n.f1.f0));
+    classRefChecker.notifyClassExists(n.f1.f0);
 
     //enter class scope
     n.f2.accept(this);
     symbolTable.newScope();
 
     n.f3.accept(this);
-
     ArrayList<String> methodNames = new ArrayList<String>();
     for(Node node : n.f4.nodes){
       methodNames.add(methodname((MethodDeclaration)node));
@@ -209,6 +223,8 @@ public class DMVisitor extends DepthFirstVisitor {
       System.out.println("Methods not distinct!");
       System.exit(-1);
     }
+
+    inheritedClass = n.f1.f0;
 
     n.f4.accept(this);
 
@@ -232,6 +248,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     n.f1.accept(this);
     symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS_EXTENDS);
+    classRefChecker.notifyClassExists(n.f1.f0);
 
     n.f2.accept(this);
     n.f3.accept(this);
@@ -260,8 +277,9 @@ public class DMVisitor extends DepthFirstVisitor {
 
     SymbolType st = getInheritedType();
     if(st == SymbolType.ST_CLASS)
-      st = SymbolType.ST_CLASS_VAR;
-    symbolTable.addSymbol(n.f1.f0, st);
+      symbolTable.addSymbol(n.f1.f0, getDeepInheritedType());
+    else
+      symbolTable.addSymbol(n.f1.f0, st);
   }
 
   /**
@@ -280,16 +298,28 @@ public class DMVisitor extends DepthFirstVisitor {
    * f12 -> "}"
    */
   public void visit(MethodDeclaration n) {
-    //add method to symbol table
+    // enter method scope
+    symbolTable.newScope();
     n.f0.accept(this);
     n.f1.accept(this);
-    n.f2.accept(this);
-    symbolTable.addSymbol(n.f2.f0, SymbolType.ST_METHOD);
 
+    // Get return type for method
+    SymbolType returnType = getInheritedType();
+    SymbolData returnData = getDeepInheritedType();
+    n.f2.accept(this);
     n.f1.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
     n.f5.accept(this);
+
+    // Convert SymbolType to SymbolData if need be
+    if (returnData == null)
+      returnData = new SymbolData(returnType);
+
+    // Put methodData into containing class
+    MethodData methodData = new MethodData(n.f2.f0, returnData, getSynthFormalParam());
+    symbolTable.addMethodToClass(inheritedClass, methodData);
+
     n.f6.accept(this);
     n.f7.accept(this);
     n.f8.accept(this);
@@ -297,6 +327,9 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f10.accept(this);
     n.f11.accept(this);
     n.f12.accept(this);
+
+    // exit method scope
+    symbolTable.exitScope();
   }
 
   ///**
@@ -308,14 +341,26 @@ public class DMVisitor extends DepthFirstVisitor {
   //  n.f1.accept(this);
   //}
 
-  ///**
-  // * f0 -> Type()
-  // * f1 -> Identifier()
-  // */
-  //public void visit(FormalParameter n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //}
+  /**
+   * f0 -> Type()
+   * f1 -> Identifier()
+   */
+  public void visit(FormalParameter n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+
+    // Push variables into method's scope
+    // Push variable types for methodData information
+    SymbolType st = getInheritedType();
+    SymbolData sd = getDeepInheritedType();
+    if(st != SymbolType.ST_CLASS) {
+      symbolTable.addSymbol(n.f1.f0, st);
+      synthFormalParam.add(new SymbolData(st));
+    } else {
+      symbolTable.addSymbol(n.f1.f0, sd);
+      synthFormalParam.add(sd);
+    }
+  }
 
   ///**
   // * f0 -> ","
@@ -336,6 +381,12 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     if(n.f0.which == 3){//if we chose Identifier()
       inheritedType = SymbolType.ST_CLASS;
+
+      // If class doesn't exist "yet", put it in backpatch list
+      NodeToken classToken = ((Identifier) n.f0.choice).f0;
+      deepInheritedType = new ClassVarData(classToken);
+      if (!symbolTable.classExists(classToken))
+        classRefChecker.verifyClassExists(classToken);
     }
   }
 
@@ -739,7 +790,6 @@ public class DMVisitor extends DepthFirstVisitor {
     //ST_CLASS_VAR
     //System.out.println(n.f0 + " is class var of type " + deepInheritedType.getDeepType());
     //deepInheritedType = null; // Reset deep type
-
 
     //inheritedType = SymbolType.ST_NULL;
   }

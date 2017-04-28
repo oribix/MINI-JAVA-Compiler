@@ -1,5 +1,6 @@
 class Main {
-	public static void main(String[] a){
+	public static void main(String[] s){
+	  A a;
 		System.out.println(new A().run());
 	}
 }
@@ -7,8 +8,15 @@ class Main {
 class A {
 	public int run() {
 		int x;
-    A w;
 		x = 1;
 		return x;
 	}
+	public boolean debugger(int cat, boolean dog, int[] bird, A lizard) {
+    A w;
+    B wing;
+    B y;
+    Main z;
+    boolean b;
+    return b;
+  }
 }
