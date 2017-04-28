@@ -58,8 +58,8 @@ public class Scope{
 
     // Debugging
     System.out.println("pushed \"" + n + ": " + data.type + "," + data.getDeepType() +"\" into scope");
-    for (Symbol s : scope.keySet())
-      System.out.println("in scope: " + s);
+    //for (Symbol s : scope.keySet())
+    //  System.out.println("in scope: " + s);
   }
 
   public SymbolData getSymbolData(NodeToken n, SymbolType type) {
@@ -69,6 +69,7 @@ public class Scope{
       case ST_METHOD:
         return scopeMethods.get(new Symbol(n));
       case ST_CLASS:
+      case ST_CLASS_EXTENDS:
         return scopeClasses.get(new Symbol(n));
       default:
         System.out.println("Error: Did not specify SymbolType");

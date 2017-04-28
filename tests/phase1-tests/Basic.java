@@ -8,11 +8,15 @@ class Main {
 class A {
 	public int run() {
 		int x;
+		x = 1;
+		return x;
+	}
+	public boolean debugger(int cat, boolean dog, int[] bird, A lizard) {
     A w;
     B wing;
     B y;
     Main z;
-		x = 1;
-		return x;
-	}
+    boolean b;
+    return b;
+  }
 }

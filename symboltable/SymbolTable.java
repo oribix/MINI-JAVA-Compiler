@@ -57,11 +57,15 @@ public class SymbolTable{
   public void addSymbol(NodeToken n, SymbolType type){
     Scope scope = getCurrentScope();
     scope.addSymbol(n, type);
+
+    //scope.PrintAll();
   }
 
   public void addSymbol(NodeToken n, SymbolData data){
     Scope scope = getCurrentScope();
     scope.addSymbol(n, data);
+
+    //scope.PrintAll();
   }
 
   public boolean classExists(NodeToken n) {
