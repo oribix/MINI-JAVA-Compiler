@@ -6,11 +6,12 @@ import java.util.*;
 public class DMVisitor extends DepthFirstVisitor {
 
   SymbolTable symbolTable;
-  ClassRefChecker classRefChecker;
-  SymbolType inheritedType;
-  SymbolData deepInheritedType;
-  Vector<SymbolData> synthFormalParam; // Used by MethodDeclaration (synthesized from param)
-  NodeToken inheritedClass;            // Used by MethodDeclaration (inherited from classDec)
+  ClassRefChecker classRefChecker;      // Checks unknown class declarations and method calls
+  SymbolType inheritedType;             // Basic type of object
+  SymbolData deepInheritedType;         // "Deep" type refers to those with derived SymbolData objects
+  Vector<SymbolData> synthFormalParam;  // Used by MethodDeclaration (synthesized from FormalParam)
+  Vector<SymbolData> synthExprList;     // Used by MessageSend (synthesized from ExprList)
+  NodeToken inheritedClass;             // Used by MethodDeclaration (inherited from classDec)
 
   public DMVisitor(){
     symbolTable = new SymbolTable();
@@ -18,6 +19,7 @@ public class DMVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_NULL;
     deepInheritedType = null;
     synthFormalParam = new Vector<>();
+    synthExprList = new Vector<>();
   }
 
   //makes sure inheritedType is of type st
@@ -47,6 +49,12 @@ public class DMVisitor extends DepthFirstVisitor {
   Vector<SymbolData> getSynthFormalParam() {
     Vector<SymbolData> data = synthFormalParam;
     synthFormalParam = new Vector<>();
+    return data;
+  }
+
+  Vector<SymbolData> getSynthExprList() {
+    Vector<SymbolData> data = synthExprList;
+    synthExprList = new Vector<>();
     return data;
   }
 
@@ -224,7 +232,8 @@ public class DMVisitor extends DepthFirstVisitor {
       System.exit(-1);
     }
 
-    inheritedClass = n.f1.f0;
+    // Should only ever be assigned to by class dec or class dec extends
+    inheritedClass = n.f1.f0; 
 
     n.f4.accept(this);
 
@@ -276,7 +285,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f2.accept(this);
 
     SymbolType st = getInheritedType();
-    if(st == SymbolType.ST_CLASS)
+    if(st == SymbolType.ST_CLASS_VAR)
       symbolTable.addSymbol(n.f1.f0, getDeepInheritedType());
     else
       symbolTable.addSymbol(n.f1.f0, st);
@@ -342,6 +351,8 @@ public class DMVisitor extends DepthFirstVisitor {
   //}
 
   /**
+   * Note: FormalParameter is ONLY used by MethodDeclaration
+   * 
    * f0 -> Type()
    * f1 -> Identifier()
    */
@@ -353,7 +364,7 @@ public class DMVisitor extends DepthFirstVisitor {
     // Push variable types for methodData information
     SymbolType st = getInheritedType();
     SymbolData sd = getDeepInheritedType();
-    if(st != SymbolType.ST_CLASS) {
+    if(st != SymbolType.ST_CLASS_VAR) {
       symbolTable.addSymbol(n.f1.f0, st);
       synthFormalParam.add(new SymbolData(st));
     } else {
@@ -380,7 +391,7 @@ public class DMVisitor extends DepthFirstVisitor {
   public void visit(Type n) {
     n.f0.accept(this);
     if(n.f0.which == 3){//if we chose Identifier()
-      inheritedType = SymbolType.ST_CLASS;
+      inheritedType = SymbolType.ST_CLASS_VAR;
 
       // If class doesn't exist "yet", put it in backpatch list
       NodeToken classToken = ((Identifier) n.f0.choice).f0;
@@ -698,55 +709,98 @@ public class DMVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_INT;
   }
 
-  ///**
-  // * f0 -> PrimaryExpression()
-  // * f1 -> "."
-  // * f2 -> Identifier()
-  // * f3 -> "("
-  // * f4 -> ( ExpressionList() )?
-  // * f5 -> ")"
-  // */
-  //public void visit(MessageSend n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //  n.f5.accept(this);
-  //}
+  /**
+   * f0 -> PrimaryExpression()
+   * f1 -> "."
+   * f2 -> Identifier()
+   * f3 -> "("
+   * f4 -> ( ExpressionList() )?
+   * f5 -> ")"
+   */
+  public void visit(MessageSend n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+    n.f3.accept(this);
+    n.f4.accept(this);
+    n.f5.accept(this);
 
-  ///**
-  // * f0 -> Expression()
-  // * f1 -> ( ExpressionRest() )*
-  // */
-  //public void visit(ExpressionList n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //}
+    /* MessageSend is a function call. Check that the method exists.
+     * If the class doesn't have that method (wrong name, wrong args),
+     * throw an error. If the class doesn't exist yet, throw the method
+     * call into the ClassRefChecker list. */ 
+    System.out.println("Method: " + n.f2.f0);
+  }
 
-  ///**
-  // * f0 -> ","
-  // * f1 -> Expression()
-  // */
-  //public void visit(ExpressionRest n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //}
+  /**
+   * Note: ExpressionList is only used by MessageSend
+   * 
+   * f0 -> Expression()
+   * f1 -> ( ExpressionRest() )*
+   */
+  public void visit(ExpressionList n) {
+    n.f0.accept(this);
 
-  ///**
-  // * f0 -> IntegerLiteral()
-  // *       | TrueLiteral()
-  // *       | FalseLiteral()
-  // *       | Identifier()
-  // *       | ThisExpression()
-  // *       | ArrayAllocationExpression()
-  // *       | AllocationExpression()
-  // *       | NotExpression()
-  // *       | BracketExpression()
-  // */
-  //public void visit(PrimaryExpression n) {
-  //  n.f0.accept(this);
-  //}
+    // record variable types for method type check
+    SymbolType st = getInheritedType();
+    SymbolData sd = getDeepInheritedType();
+    if(st != SymbolType.ST_CLASS)
+      synthExprList.add(new SymbolData(st));
+    else
+      synthExprList.add(sd);
+
+    n.f1.accept(this);
+  }
+
+  /**
+   * Note: ExpressionRest is only used by ExpressionList
+   * 
+   * f0 -> ","
+   * f1 -> Expression()
+   */
+  public void visit(ExpressionRest n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+
+    // record variable types for method type check
+    SymbolType st = getInheritedType();
+    SymbolData sd = getDeepInheritedType();
+    if(st != SymbolType.ST_CLASS)
+      synthExprList.add(new SymbolData(st));
+    else
+      synthExprList.add(sd);
+  }
+
+  /**
+   * f0 -> IntegerLiteral()
+   *       | TrueLiteral()
+   *       | FalseLiteral()
+   *       | Identifier()
+   *       | ThisExpression()
+   *       | ArrayAllocationExpression()
+   *       | AllocationExpression()
+   *       | NotExpression()
+   *       | BracketExpression()
+   */
+  public void visit(PrimaryExpression n) {
+    n.f0.accept(this);
+
+    // To check if variable exists (identifiers). If so, grab its type.
+    if (n.f0.which == 3) {
+      NodeToken varName = ((Identifier) n.f0.choice).f0;
+      SymbolData data = symbolTable.getSymbolData(varName, SymbolType.ST_VARIABLE);
+
+      if (data == null) {
+        System.err.println("Error: variable " + varName + " not in scope");
+        System.exit(-1);
+      }
+
+      inheritedType = data.getType();
+      deepInheritedType = data;
+
+      System.out.println("PrimaryExpression: " + varName + ", " + data.getFormalType());
+    }
+  }
 
   /**
    * f0 -> <INTEGER_LITERAL>

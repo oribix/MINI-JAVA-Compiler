@@ -17,6 +17,7 @@ class A {
     B y;
     Main z;
     boolean b;
+    y = y.fireball(true, 1, 2, w);
     return b;
   }
 }
