@@ -47,7 +47,7 @@ public class Scope{
     }
 
     if (scope.containsKey(symbol)){
-      System.err.println("error: class \"" + n + "\" not distinct");
+      System.err.println("error: \"" + n + "\" not distinct");
       System.exit(-1);
     }
     else

@@ -199,11 +199,16 @@ public class DMVisitor extends DepthFirstVisitor {
       methodNames.add(methodname((MethodDeclaration)node));
     }
 
-    System.out.println("method names:");
+    System.out.println("\nmethod names:");
     for(String s : methodNames){
       System.out.println(s);
     }
     System.out.println();
+
+    if(!distinct(methodNames)){
+      System.out.println("Methods not distinct!");
+      System.exit(-1);
+    }
 
     n.f4.accept(this);
 
@@ -493,21 +498,20 @@ public class DMVisitor extends DepthFirstVisitor {
   //  n.f4.accept(this);
   //}
 
-  /**
-   * f0 -> AndExpression()
-   *       | CompareExpression()
-   *       | PlusExpression()
-   *       | MinusExpression()
-   *       | TimesExpression()
-   *       | ArrayLookup()
-   *       | ArrayLength()
-   *       | MessageSend()
-   *       | PrimaryExpression()
-   */
-  public void visit(Expression n) {
-    n.f0.accept(this);
-    System.out.println("Expression Evaluated");
-  }
+  ///**
+  // * f0 -> AndExpression()
+  // *       | CompareExpression()
+  // *       | PlusExpression()
+  // *       | MinusExpression()
+  // *       | TimesExpression()
+  // *       | ArrayLookup()
+  // *       | ArrayLength()
+  // *       | MessageSend()
+  // *       | PrimaryExpression()
+  // */
+  //public void visit(Expression n) {
+  //  n.f0.accept(this);
+  //}
 
   /**
    * f0 -> PrimaryExpression()
