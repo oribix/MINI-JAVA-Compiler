@@ -4,6 +4,7 @@ public enum SymbolType {
   //no type
   ST_VOID,  // only ever used in main
   ST_NULL,
+  ST_UNKNOWN, // used for method backpatching
 
   //Generic overarching types
   ST_VARIABLE,

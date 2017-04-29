@@ -76,6 +76,8 @@ public class SymbolTable{
 
   public void addMethodToClass(NodeToken classToken, MethodData methodData) {
     getGlobalScope().addMethodToClass(classToken, methodData);
+
+    //getGlobalScope().PrintAll();
   }
 
   public MethodData getMethodFromClass(NodeToken classToken, NodeToken methodToken) {

@@ -60,12 +60,24 @@ public class MethodData extends SymbolData {
     return methodName;
   }
 
+  public void setName(NodeToken n) {
+    methodName = n;
+  }
+
   public SymbolData getReturnType() {
     return returnType;
   }
 
+  public void setReturnType(SymbolData sd) {
+    returnType = sd;
+  }
+
   public Vector<SymbolData> getParameterTypes() {
     return parameterTypes;
+  }
+
+  public void setParameterTypes(Vector<SymbolData> pt) {
+    parameterTypes = pt;
   }
 
   public boolean equals(Object o) {

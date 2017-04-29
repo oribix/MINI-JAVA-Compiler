@@ -48,11 +48,14 @@ public class ClassRefChecker {
     classMap.remove(classToken.toString());
 
     // Must not just remove methods. Have to typecheck them with original methods
-    //for (MethodData md : methodMap.get(classToken.toString())) {
-    //  MethodData origMD = symbolTable.getMethodFromClass(classToken, md.getName());
-    //  if (origMD != null)
-    //    System.out.println("In notify: " + origMD.getDeepType());
-    //}
+    Vector<MethodData> methodData = methodMap.get(classToken.toString());
+    if (methodData != null) {
+      for (MethodData md : methodData) {
+        MethodData origMD = symbolTable.getMethodFromClass(classToken, md.getName());
+        if (origMD != null)
+          System.out.println("In notify: " + origMD.getDeepType());
+      }
+    }
 
     System.out.println("In notify: " + classToken);
   }
@@ -62,6 +65,7 @@ public class ClassRefChecker {
     if (!classMap.isEmpty()) {
       System.err.println("Error: class still exists");
       System.err.println(classMap.toString());
+      System.exit(-1);
       // Print real error message that specifies line number and column number
     }
     else

@@ -9,9 +9,11 @@ public class DMVisitor extends DepthFirstVisitor {
   ClassRefChecker classRefChecker;      // Checks unknown class declarations and method calls
   SymbolType inheritedType;             // Basic type of object
   SymbolData deepInheritedType;         // "Deep" type refers to those with derived SymbolData objects
+  NodeToken inheritedClass;             // Used by MethodDeclaration (inherited from classDec)
   Vector<SymbolData> synthFormalParam;  // Used by MethodDeclaration (synthesized from FormalParam)
   Vector<SymbolData> synthExprList;     // Used by MessageSend (synthesized from ExprList)
-  NodeToken inheritedClass;             // Used by MethodDeclaration (inherited from classDec)
+  Vector<MethodData> synthUnverifiedMethods;  // Used by Statement and ClassDecl (synthesize from MessageSend)
+  boolean synthCalledMethod;            // Used in Statements and methodDec to backpatch method return types
 
   public DMVisitor(){
     symbolTable = new SymbolTable();
@@ -20,6 +22,7 @@ public class DMVisitor extends DepthFirstVisitor {
     deepInheritedType = null;
     synthFormalParam = new Vector<>();
     synthExprList = new Vector<>();
+    synthUnverifiedMethods = new Vector<>();
   }
 
   //makes sure inheritedType is of type st
@@ -58,6 +61,12 @@ public class DMVisitor extends DepthFirstVisitor {
     return data;
   }
 
+  Vector<MethodData> getSynthUnverifiedMethods() {
+    Vector<MethodData> data = synthUnverifiedMethods;
+    synthUnverifiedMethods = new Vector<>();
+    return data;
+  }
+
   //suggested helper functions
 
   //returns class's name
@@ -90,10 +99,18 @@ public class DMVisitor extends DepthFirstVisitor {
     }
   }
 
-  void printErrorMethod(NodeToken methodToken, Vector<SymbolData> exprList) {
+  boolean getSynthCalledMethod() {
+    if (synthCalledMethod) {
+      synthCalledMethod = false;
+      return true;
+    }
+    return false;
+  }
+
+  void printErrorMethod(String prepend, NodeToken methodToken, Vector<SymbolData> exprList) {
     int listSize = exprList.size();
 
-    System.err.print(methodToken + "(");
+    System.err.print(prepend + methodToken + "(");
     for (int i = 0; i < listSize; i++) {
       if (i != listSize - 1)
         System.err.print(exprList.get(i).getFormalType() + ", ");
@@ -103,24 +120,76 @@ public class DMVisitor extends DepthFirstVisitor {
     System.err.println(")");
   }
 
+  void checkAndAddClassMethods(NodeToken classToken, NodeListOptional n) {
+    ArrayList<String> methodNames = new ArrayList<String>();
+    for(Node node : n.nodes){
+      MethodDeclaration md = (MethodDeclaration)node;
+      methodNames.add(methodname(md));
+      symbolTable.addMethodToClass(classToken, readMethod(md));
+    }
+
+    System.out.println("\nmethod names:");
+    for(String s : methodNames){
+      System.out.println(s);
+    }
+    System.out.println();
+
+    if(!distinct(methodNames)){
+      System.out.println("Methods not distinct!");
+      System.exit(-1);
+    }
+  }
+
+  MethodData readMethod(MethodDeclaration md) {
+    MethodDeclareVisitor mdVisitor = new MethodDeclareVisitor(symbolTable);
+
+    // Get return type for method
+    md.f1.accept(mdVisitor);
+    SymbolType returnType = mdVisitor.getInheritedType();
+    SymbolData returnData = mdVisitor.getDeepInheritedType();
+    if (returnData == null)
+      returnData = new SymbolData(returnType);
+
+    // Get formal paramters
+    md.f4.accept(mdVisitor);
+
+    // Add unverified classes to ClassRefChecker
+    for (NodeToken classToken : mdVisitor.unverifiedClasses)
+      classRefChecker.verifyClassExists(classToken);
+
+    return new MethodData(md.f2.f0, returnData, mdVisitor.getSynthFormalParam());
+  }
+
   /**
    * f0 -> MainClass()
    * f1 -> ( TypeDeclaration() )*
    * f2 -> <EOF>
    */
   public void visit(Goal n) {
+    // Verify distinct classes and methods, adds both to symbol table
     ArrayList<String> classnames = new ArrayList<String>();
     classnames.add(classname(n.f0));
+    symbolTable.addSymbol(n.f0.f1.f0, new ClassData(n.f0.f1.f0));
+
     //add all classnames in TypeDeclaration* to list
     for(Node typeDeclaration : n.f1.nodes){
       TypeDeclaration td = (TypeDeclaration)typeDeclaration;
       Node choice = td.f0.choice;
       int which = td.f0.which;
       if(which == 0){//ClassDeclaration
-        classnames.add(classname((ClassDeclaration)choice));
+        ClassDeclaration cd = (ClassDeclaration)choice;
+        classnames.add(classname(cd));
+
+        // Note: do we need to add main class's main method above? Probably not.
+        symbolTable.addSymbol(cd.f1.f0, new ClassData(cd.f1.f0)); // Add class
+        classRefChecker.notifyClassExists(cd.f1.f0);              // Notify class exists
+        checkAndAddClassMethods(cd.f1.f0, cd.f4);                 // Add methods
       }
       else{//ClassExtendsDeclaration
-        classnames.add(classname((ClassExtendsDeclaration)choice));
+        ClassExtendsDeclaration ced = (ClassExtendsDeclaration)choice;
+        classnames.add(classname(ced));
+
+        symbolTable.addSymbol(ced.f1.f0, SymbolType.ST_CLASS_EXTENDS);
       }
     }
 
@@ -134,10 +203,11 @@ public class DMVisitor extends DepthFirstVisitor {
       System.exit(-1);
     }
 
+    classRefChecker.checkClassesExisted();
+
     n.f0.accept(this);
     n.f1.accept(this);
     n.f2.accept(this);
-    classRefChecker.checkClassesExisted();
   }
 
   /**
@@ -164,7 +234,6 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
-    symbolTable.addSymbol(n.f1.f0, new ClassData(n.f1.f0));
 
     //enter new scope for class
     n.f2.accept(this);
@@ -174,7 +243,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f4.accept(this);
     n.f5.accept(this);
     n.f6.accept(this);
-    symbolTable.addMethodToClass(n.f1.f0, MethodData.mainInstance(n.f6));
+    //symbolTable.addMethodToClass(n.f1.f0, MethodData.mainInstance(n.f6));
 
     //enter new scope for main
     n.f7.accept(this);
@@ -221,28 +290,27 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
-    symbolTable.addSymbol(n.f1.f0, new ClassData(n.f1.f0));
 
     //enter class scope
     n.f2.accept(this);
     symbolTable.newScope();
 
     n.f3.accept(this);
-    ArrayList<String> methodNames = new ArrayList<String>();
-    for(Node node : n.f4.nodes){
-      methodNames.add(methodname((MethodDeclaration)node));
-    }
+    //ArrayList<String> methodNames = new ArrayList<String>();
+    //for(Node node : n.f4.nodes){
+    //  methodNames.add(methodname((MethodDeclaration)node));
+    //}
 
-    System.out.println("\nmethod names:");
-    for(String s : methodNames){
-      System.out.println(s);
-    }
-    System.out.println();
+    //System.out.println("\nmethod names:");
+    //for(String s : methodNames){
+    //  System.out.println(s);
+    //}
+    //System.out.println();
 
-    if(!distinct(methodNames)){
-      System.out.println("Methods not distinct!");
-      System.exit(-1);
-    }
+    //if(!distinct(methodNames)){
+    //  System.out.println("Methods not distinct!");
+    //  System.exit(-1);
+    //}
 
     // Should only ever be assigned to by class dec or class dec extends
     inheritedClass = n.f1.f0; 
@@ -254,7 +322,7 @@ public class DMVisitor extends DepthFirstVisitor {
     symbolTable.exitScope();
 
     // Class and methods now in symbol table. Do backpatch check.
-    classRefChecker.notifyClassExists(n.f1.f0);
+    //classRefChecker.notifyClassExists(n.f1.f0);
   }
 
   /**
@@ -271,7 +339,6 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
-    symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS_EXTENDS);
 
     n.f2.accept(this);
     n.f3.accept(this);
@@ -288,7 +355,7 @@ public class DMVisitor extends DepthFirstVisitor {
     symbolTable.exitScope();
 
     // Class and methods now in symbol table. Do backpatch check.
-    classRefChecker.notifyClassExists(n.f1.f0);
+    //classRefChecker.notifyClassExists(n.f1.f0);
   }
 
   /**
@@ -344,7 +411,7 @@ public class DMVisitor extends DepthFirstVisitor {
 
     // Put methodData into containing class
     MethodData methodData = new MethodData(n.f2.f0, returnData, getSynthFormalParam());
-    symbolTable.addMethodToClass(inheritedClass, methodData);
+    //symbolTable.addMethodToClass(inheritedClass, methodData);
 
     n.f6.accept(this);
     n.f7.accept(this);
@@ -353,6 +420,8 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f10.accept(this);
     n.f11.accept(this);
     n.f12.accept(this);
+
+    // To do: Typecheck the return value
 
     // exit method scope
     symbolTable.exitScope();
@@ -382,7 +451,7 @@ public class DMVisitor extends DepthFirstVisitor {
     SymbolType st = getInheritedType();
     SymbolData sd = getDeepInheritedType();
     if(st != SymbolType.ST_CLASS_VAR) {
-      symbolTable.addSymbol(n.f1.f0, st);
+      symbolTable.addSymbol(n.f1.f0, st); 
       synthFormalParam.add(new SymbolData(st));
     } else {
       symbolTable.addSymbol(n.f1.f0, sd);
@@ -456,6 +525,14 @@ public class DMVisitor extends DepthFirstVisitor {
    */
   public void visit(Statement n) {
     n.f0.accept(this);
+
+    if (getSynthCalledMethod()) {
+      System.out.println("Statement: Method was called!");
+      for (MethodData md : getSynthUnverifiedMethods()) {
+        md.setReturnType(new SymbolData(SymbolType.ST_INT));
+        System.out.println(md.getDeepType());
+      }
+    }
   }
 
   /**
@@ -726,7 +803,6 @@ public class DMVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_INT;
   }
 
-    /*  */ 
   /** 
    * MessageSend is a function call. Check that the method exists.
    * If the class doesn't have that method (wrong name, wrong args),
@@ -741,58 +817,52 @@ public class DMVisitor extends DepthFirstVisitor {
    * f5 -> ")"
    */
   public void visit(MessageSend n) {
-    SymbolData callerData = null;
-
-    n.f0.accept(this);
-
     // In sec: consider case where deepInheritedType isn't null, but variable is backpatched
     // method should be backpatched too then.
+    // Insertion into backpatching list has to occur at parent of messageSend so we know what
+    // return type we need for the MethodData we put in classRefChecker for backpatching later.
 
-    // Get class type of caller from primary expression
-    callerData = getDeepInheritedType();
-    if (callerData == null)
-      System.out.println("Error: Message Send case not handled yet.");
-    else if (!symbolTable.classExists(new NodeToken(callerData.getDeepType()))) {
-      // Insertion into backpatching list has to occur at parent of messageSend so we know what
-      // return type we need for the MethodData we put in classRefChecker for backpatching later.
-      System.out.println("MessageSend: type that doesn't exist");
-    }
-    else
-      System.out.println("MessageSend: " + callerData.getDeepType());
+    synthCalledMethod = true;
 
+    n.f0.accept(this);  // PrimaryExpr
+    SymbolData callerData = getDeepInheritedType();
     n.f1.accept(this);
     n.f2.accept(this);
     n.f3.accept(this);
-    n.f4.accept(this);  // Get arguments in ExpressionList n.f4
+    n.f4.accept(this);  // ExprList
+    Vector<SymbolData> givenArgs = getSynthExprList();
     n.f5.accept(this);
 
     System.out.println("Method: " + n.f2.f0);
 
-    if (callerData != null) {
-      MethodData methodData = symbolTable.getMethodFromClass(new NodeToken(callerData.getDeepType()), n.f2.f0);
+    // Get class type of caller from primary expression
+    if (callerData == null)
+      System.out.println("Error: Message Send case not handled yet.");
+    else if (!symbolTable.classExists(new NodeToken(callerData.getDeepType()))) {
+      System.out.println("MessageSend: type that doesn't exist");
+      MethodData unknownMethod = 
+          new MethodData(n.f2.f0, new SymbolData(SymbolType.ST_UNKNOWN), givenArgs);
+      synthUnverifiedMethods.add(unknownMethod);
+    } else {
+      MethodData methodData = symbolTable
+          .getMethodFromClass(new NodeToken(callerData.getDeepType()), n.f2.f0);
 
-      // Check that method exists, throw error if it doesn't
+      // Error check for method existing
       if (methodData == null) {
         System.err.println("Error: " + n.f2.f0 + " doesn't exist");
         System.exit(-1);
       }
 
-      Vector<SymbolData> methodParams = methodData.getParameterTypes(),
-          givenArgs = getSynthExprList();
-
-      // Check that method arguments are correct and output error if they aren't
+      // Error check for correct argument types
+      Vector<SymbolData> methodParams = methodData.getParameterTypes();
       if (!methodParams.equals(givenArgs)) {
         System.err.println("Error: mismatched method signatures.");
-
-        System.err.print("Method should be: ");
-        printErrorMethod(n.f2.f0, methodParams);
-
-        System.err.print("Method given: ");
-        printErrorMethod(n.f2.f0, givenArgs);
-
+        printErrorMethod("Method should be: ", n.f2.f0, methodParams);
+        printErrorMethod("Method given: ", n.f2.f0, givenArgs);
         System.exit(-1);
       }
 
+      // Set return type in inheritedType and deepInheritedType
       SymbolData returnType = methodData.getReturnType();
       inheritedType = returnType.getType();
       if (returnType.getType() == SymbolType.ST_CLASS_VAR)
