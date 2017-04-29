@@ -90,6 +90,19 @@ public class DMVisitor extends DepthFirstVisitor {
     }
   }
 
+  void printErrorMethod(NodeToken methodToken, Vector<SymbolData> exprList) {
+    int listSize = exprList.size();
+
+    System.err.print(methodToken + "(");
+    for (int i = 0; i < listSize; i++) {
+      if (i != listSize - 1)
+        System.err.print(exprList.get(i).getFormalType() + ", ");
+      else
+        System.err.print(exprList.get(i).getFormalType());
+    }
+    System.err.println(")");
+  }
+
   /**
    * f0 -> MainClass()
    * f1 -> ( TypeDeclaration() )*
@@ -709,7 +722,13 @@ public class DMVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_INT;
   }
 
-  /**
+    /*  */ 
+  /** 
+   * MessageSend is a function call. Check that the method exists.
+   * If the class doesn't have that method (wrong name, wrong args),
+   * throw an error. If the class doesn't exist yet, throw the method
+   * call into the ClassRefChecker list.
+   *
    * f0 -> PrimaryExpression()
    * f1 -> "."
    * f2 -> Identifier()
@@ -718,18 +737,61 @@ public class DMVisitor extends DepthFirstVisitor {
    * f5 -> ")"
    */
   public void visit(MessageSend n) {
+    SymbolData callerData = null;
+
     n.f0.accept(this);
+
+    // In sec: consider case where deepInheritedType isn't null, but variable is backpatched
+    // method should be backpatched too then.
+
+    // Get class type of caller from primary expression
+    callerData = getDeepInheritedType();
+    if (callerData == null)
+      System.out.println("Error: Message Send case not handled yet.");
+    else
+      System.out.println("MessageSend: " + callerData.getDeepType());
+
     n.f1.accept(this);
     n.f2.accept(this);
     n.f3.accept(this);
-    n.f4.accept(this);
+    n.f4.accept(this);  // Get arguments in ExpressionList n.f4
     n.f5.accept(this);
 
-    /* MessageSend is a function call. Check that the method exists.
-     * If the class doesn't have that method (wrong name, wrong args),
-     * throw an error. If the class doesn't exist yet, throw the method
-     * call into the ClassRefChecker list. */ 
     System.out.println("Method: " + n.f2.f0);
+
+    if (callerData != null) {
+      MethodData methodData = symbolTable.getMethodFromClass(new NodeToken(callerData.getDeepType()), n.f2.f0);
+
+      // Check that method exists, throw error if it doesn't
+      if (methodData == null) {
+        System.err.println("Error: " + n.f2.f0 + " doesn't exist");
+        System.exit(-1);
+      }
+
+      Vector<SymbolData> methodParams = methodData.getParameterTypes(),
+          givenArgs = getSynthExprList();
+
+      // Check that method arguments are correct and output error if they aren't
+      if (!methodParams.equals(givenArgs)) {
+        System.err.println("Error: mismatched method signatures.");
+
+        System.err.print("Method should be: ");
+        printErrorMethod(n.f2.f0, methodParams);
+
+        System.err.print("Method given: ");
+        printErrorMethod(n.f2.f0, givenArgs);
+
+        System.exit(-1);
+      }
+
+      SymbolData returnType = methodData.getReturnType();
+      inheritedType = returnType.getType();
+      if (data.getType() == SymbolType.ST_CLASS_VAR)
+        deepInheritedType = returnType;
+
+      System.out.println(methodData.getDeepType() + " was called");
+      System.out.println("MessageSend is type: " + returnType.getFormalType());
+    }
   }
 
   /**
@@ -744,7 +806,7 @@ public class DMVisitor extends DepthFirstVisitor {
     // record variable types for method type check
     SymbolType st = getInheritedType();
     SymbolData sd = getDeepInheritedType();
-    if(st != SymbolType.ST_CLASS)
+    if(st != SymbolType.ST_CLASS_VAR)
       synthExprList.add(new SymbolData(st));
     else
       synthExprList.add(sd);
@@ -765,7 +827,7 @@ public class DMVisitor extends DepthFirstVisitor {
     // record variable types for method type check
     SymbolType st = getInheritedType();
     SymbolData sd = getDeepInheritedType();
-    if(st != SymbolType.ST_CLASS)
+    if(st != SymbolType.ST_CLASS_VAR)
       synthExprList.add(new SymbolData(st));
     else
       synthExprList.add(sd);
@@ -796,7 +858,8 @@ public class DMVisitor extends DepthFirstVisitor {
       }
 
       inheritedType = data.getType();
-      deepInheritedType = data;
+      if (data.getType() == SymbolType.ST_CLASS_VAR)
+        deepInheritedType = data;
 
       System.out.println("PrimaryExpression: " + varName + ", " + data.getFormalType());
     }

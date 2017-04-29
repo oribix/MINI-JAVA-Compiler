@@ -46,7 +46,6 @@ public class SymbolTable{
   //returns Symbol Data of the node passed in if it exists in the Symbol table
   //else null
   public SymbolData getSymbolData(NodeToken n, SymbolType st){
-    String name = n.toString();
     for(Scope scope : scopeStack){
       SymbolData sd = scope.getSymbolData(n, st);
       if(sd != null) return sd;
@@ -77,5 +76,10 @@ public class SymbolTable{
 
   public void addMethodToClass(NodeToken classToken, MethodData methodData) {
     getGlobalScope().addMethodToClass(classToken, methodData);
+  }
+
+  public MethodData getMethodFromClass(NodeToken classToken, NodeToken methodToken) {
+    // Later: edit this function to look at extended class parents
+    return getGlobalScope().getMethodFromClass(classToken, methodToken);
   }
 }

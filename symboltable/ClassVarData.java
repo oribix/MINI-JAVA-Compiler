@@ -12,4 +12,12 @@ public class ClassVarData extends SymbolData {
   public String getDeepType() {
     return className;
   }
+
+  public boolean equals(Object o) {
+    return o instanceof ClassVarData && className.equals(((ClassVarData) o).className);
+  }
+
+  public int hashCode() {
+    return className.hashCode();
+  }
 }

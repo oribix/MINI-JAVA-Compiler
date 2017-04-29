@@ -90,6 +90,24 @@ public class Scope{
     System.out.println(classToken + "," + classData.getType() + " adds " + methodData.getDeepType());
   }
 
+  // Next Time: Test this method and use it to test if methods exist when used in code
+  // Used by SymbolTable for retrieving methods
+  // Should ONLY be used on global scope. This function fails otherwise.
+  protected MethodData getMethodFromClass(NodeToken classToken, NodeToken methodToken) {
+    if (!scopeClasses.containsKey(new Symbol(classToken))) {
+      System.err.println("error: attempted to retrieve method in non-global scope\n");
+      System.exit(-1);
+    }
+
+    ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+    String methodName = methodToken.toString();
+    for (MethodData methodData : classData.getMethods())
+      if (methodData.getName().equals(methodName))
+        return methodData;
+
+    return null;
+  }
+
   // Debugging code
   public void PrintAll() {
     System.out.println("Classes:");

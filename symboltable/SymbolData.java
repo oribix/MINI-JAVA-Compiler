@@ -1,5 +1,4 @@
 package symboltable;
-//import syntaxtree.*;
 
 //Holds all info to be associated with a Symbol
 public class SymbolData{
@@ -25,5 +24,13 @@ public class SymbolData{
     if (getDeepType() == null)
       return getType().toString();
     return getDeepType();
+  }
+
+  public boolean equals(Object o) {
+    return o instanceof SymbolData && type.equals(((SymbolData) o).type);
+  }
+
+  public int hashCode() {
+    return type.hashCode();
   }
 }

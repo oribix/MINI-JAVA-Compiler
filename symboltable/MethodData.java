@@ -55,4 +55,30 @@ public class MethodData extends SymbolData {
   public String getDeepType() {
     return methodType();
   }
+
+  public String getName() {
+    return methodName;
+  }
+
+  public SymbolData getReturnType() {
+    return returnType;
+  }
+
+  public Vector<SymbolData> getParameterTypes() {
+    return parameterTypes;
+  }
+
+  public boolean equals(Object o) {
+    if (o instanceof MethodData) {
+      MethodData md = (MethodData) o;
+      return hashCode() == md.hashCode();
+    }
+
+    return false;
+  }
+
+  public int hashCode() {
+    String uniqueType = methodType() + ": " + methodName;
+    return uniqueType.hashCode();
+  }
 }

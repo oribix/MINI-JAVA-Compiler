@@ -18,4 +18,13 @@ public class ClassData extends SymbolData {
   public Vector<MethodData> getMethods() {
     return methods;
   }
+
+  public boolean equals(Object o) {
+    return o instanceof ClassData 
+        && methods.equals(((ClassData) o).methods);
+  }
+
+  public int hashCode() {
+    return methods.hashCode();
+  }
 }
