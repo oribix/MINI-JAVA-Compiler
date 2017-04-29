@@ -6,16 +6,18 @@ import syntaxtree.NodeToken;
 
 public class ClassRefChecker {
   /* string as key to quickly find classes in map
-   * Vector<NodeToken> to store line and column number info for error messages */
+   * Vector<NodeToken/MethodData> to store line and column number info for error messages */
   HashMap<String, Vector<NodeToken>> classMap;
+  HashMap<String, Vector<MethodData>> methodMap;
+  SymbolTable symbolTable;  // For typechecking backpatched methods
 
-  public ClassRefChecker() {
+  public ClassRefChecker(SymbolTable table) {
     classMap = new HashMap<>();
+    methodMap = new HashMap<>();
+    symbolTable = table;
   }
 
-  /* Puts classMap into map of classMap that do not exist yet
-   * If unknown class is referred to twice, we do not overwrite
-   * the old NodeToken in the map */
+  // Puts classMap into map of classMap that do not exist yet 
   public void verifyClassExists(NodeToken classToken) {
     Vector<NodeToken> nodes = classMap.get(classToken.toString());
     if (nodes == null) {
@@ -28,9 +30,29 @@ public class ClassRefChecker {
     nodes.add(classToken);
   }
 
+  // Puts classMap into map of classMap that do not exist yet 
+  public void verifyMethodExists(NodeToken classToken, MethodData methodData) {
+    Vector<MethodData> data = methodMap.get(classToken.toString());
+    if (data == null) {
+      methodMap.put(classToken.toString(), new Vector<>());
+      data = methodMap.get(classToken.toString());
+    }
+
+    System.out.println("In verify: " + classToken + ", " + methodData.getDeepType());
+
+    data.add(methodData);
+  }
+
   // Called whenever class is created to remove objects of this class from classMap
   public void notifyClassExists(NodeToken classToken) {
     classMap.remove(classToken.toString());
+
+    // Must not just remove methods. Have to typecheck them with original methods
+    //for (MethodData md : methodMap.get(classToken.toString())) {
+    //  MethodData origMD = symbolTable.getMethodFromClass(classToken, md.getName());
+    //  if (origMD != null)
+    //    System.out.println("In notify: " + origMD.getDeepType());
+    //}
 
     System.out.println("In notify: " + classToken);
   }

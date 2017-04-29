@@ -15,7 +15,7 @@ public class DMVisitor extends DepthFirstVisitor {
 
   public DMVisitor(){
     symbolTable = new SymbolTable();
-    classRefChecker = new ClassRefChecker();
+    classRefChecker = new ClassRefChecker(symbolTable);
     inheritedType = SymbolType.ST_NULL;
     deepInheritedType = null;
     synthFormalParam = new Vector<>();
@@ -174,7 +174,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f4.accept(this);
     n.f5.accept(this);
     n.f6.accept(this);
-    symbolTable.addMethodToClass(n.f1.f0, MethodData.mainInstance());
+    symbolTable.addMethodToClass(n.f1.f0, MethodData.mainInstance(n.f6));
 
     //enter new scope for main
     n.f7.accept(this);
@@ -222,7 +222,6 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     n.f1.accept(this);
     symbolTable.addSymbol(n.f1.f0, new ClassData(n.f1.f0));
-    classRefChecker.notifyClassExists(n.f1.f0);
 
     //enter class scope
     n.f2.accept(this);
@@ -253,6 +252,9 @@ public class DMVisitor extends DepthFirstVisitor {
     //exit class scope
     n.f5.accept(this);
     symbolTable.exitScope();
+
+    // Class and methods now in symbol table. Do backpatch check.
+    classRefChecker.notifyClassExists(n.f1.f0);
   }
 
   /**
@@ -270,7 +272,6 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     n.f1.accept(this);
     symbolTable.addSymbol(n.f1.f0, SymbolType.ST_CLASS_EXTENDS);
-    classRefChecker.notifyClassExists(n.f1.f0);
 
     n.f2.accept(this);
     n.f3.accept(this);
@@ -285,6 +286,9 @@ public class DMVisitor extends DepthFirstVisitor {
     //exit class scope
     n.f7.accept(this);
     symbolTable.exitScope();
+
+    // Class and methods now in symbol table. Do backpatch check.
+    classRefChecker.notifyClassExists(n.f1.f0);
   }
 
   /**
@@ -748,6 +752,11 @@ public class DMVisitor extends DepthFirstVisitor {
     callerData = getDeepInheritedType();
     if (callerData == null)
       System.out.println("Error: Message Send case not handled yet.");
+    else if (!symbolTable.classExists(new NodeToken(callerData.getDeepType()))) {
+      // Insertion into backpatching list has to occur at parent of messageSend so we know what
+      // return type we need for the MethodData we put in classRefChecker for backpatching later.
+      System.out.println("MessageSend: type that doesn't exist");
+    }
     else
       System.out.println("MessageSend: " + callerData.getDeepType());
 
@@ -786,11 +795,10 @@ public class DMVisitor extends DepthFirstVisitor {
 
       SymbolData returnType = methodData.getReturnType();
       inheritedType = returnType.getType();
-      if (data.getType() == SymbolType.ST_CLASS_VAR)
+      if (returnType.getType() == SymbolType.ST_CLASS_VAR)
         deepInheritedType = returnType;
 
       System.out.println(methodData.getDeepType() + " was called");
-      System.out.println("MessageSend is type: " + returnType.getFormalType());
     }
   }
 

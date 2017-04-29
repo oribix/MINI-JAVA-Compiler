@@ -102,7 +102,7 @@ public class Scope{
     ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
     String methodName = methodToken.toString();
     for (MethodData methodData : classData.getMethods())
-      if (methodData.getName().equals(methodName))
+      if (methodData.getName().toString().equals(methodName))
         return methodData;
 
     return null;

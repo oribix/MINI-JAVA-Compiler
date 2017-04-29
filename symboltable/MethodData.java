@@ -3,15 +3,15 @@ import java.util.Vector;
 
 import syntaxtree.NodeToken;
 
-// Work on this later, Daniel! First, the ClassRefChecker!
 public class MethodData extends SymbolData {
-  String methodName;
+  NodeToken methodName; 
   SymbolData returnType;
   Vector<SymbolData> parameterTypes;
 
-  static public MethodData mainInstance() {
+  // nodeToken contains line and column info, which is why we need it in case of errors
+  static public MethodData mainInstance(NodeToken mainToken) {
     MethodData md = new MethodData();
-    md.methodName = "main";
+    md.methodName = mainToken;
     md.returnType = new SymbolData(SymbolType.ST_VOID);
     md.parameterTypes.add(new SymbolData(SymbolType.ST_STRING_ARR));
 
@@ -20,14 +20,14 @@ public class MethodData extends SymbolData {
 
   public MethodData() {
     super(SymbolType.ST_METHOD);
-    this.methodName = "";
+    this.methodName = new NodeToken("");
     this.returnType = new SymbolData(SymbolType.ST_NULL);
     this.parameterTypes = new Vector<>();
   }
 
   public MethodData(NodeToken methodName, SymbolData returnType, Vector<SymbolData> parameterTypes) {
     super(SymbolType.ST_METHOD);
-    this.methodName = methodName.toString();
+    this.methodName = methodName;
     this.returnType = returnType;
     this.parameterTypes = parameterTypes;
 
@@ -56,7 +56,7 @@ public class MethodData extends SymbolData {
     return methodType();
   }
 
-  public String getName() {
+  public NodeToken getName() {
     return methodName;
   }
 
@@ -78,7 +78,7 @@ public class MethodData extends SymbolData {
   }
 
   public int hashCode() {
-    String uniqueType = methodType() + ": " + methodName;
+    String uniqueType = methodType() + ": " + methodName.toString();
     return uniqueType.hashCode();
   }
 }
