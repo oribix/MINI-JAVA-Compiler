@@ -967,12 +967,44 @@ public class DMVisitor extends DepthFirstVisitor {
 
     // Error check for correct argument types
     Vector<SymbolData> methodParams = methodData.getParameterTypes();
-    if (!methodParams.equals(givenArgs)) {
+    if(methodParams.size() != givenArgs.size()){
       System.err.println("Error: mismatched method signatures.");
       printErrorMethod("Method should be: ", n.f2.f0, methodParams);
       printErrorMethod("Method given: ", n.f2.f0, givenArgs);
       System.exit(-1);
     }
+
+    for(int i = 0; i < givenArgs.size(); i++){
+      SymbolData mpSD = methodParams.get(i);
+      SymbolData gaSD = givenArgs.get(i);
+      if(mpSD.getType() != gaSD.getType()){
+        System.err.println("Error: mismatched method signatures.");
+        printErrorMethod("Method should be: ", n.f2.f0, methodParams);
+        printErrorMethod("Method given: ", n.f2.f0, givenArgs);
+        System.exit(-1);
+      }
+
+      //check if given is a subtype of the method parameter
+      if(mpSD.getType() == SymbolType.ST_CLASS_VAR){
+        System.out.println(mpSD.getType() + " and " + gaSD.getType());
+        NodeToken mpNT = new NodeToken(((ClassVarData)mpSD).getDeepType());
+        NodeToken gaNT = new NodeToken(((ClassVarData)gaSD).getDeepType());
+
+        if(!isSubtype(gaNT, mpNT)){
+          System.err.println("Error: mismatched method signatures.");
+          printErrorMethod("Method should be: ", n.f2.f0, methodParams);
+          printErrorMethod("Method given: ", n.f2.f0, givenArgs);
+          System.exit(-1);
+        }
+      }
+    }
+
+    //if (!methodParams.equals(givenArgs)) {
+    //  System.err.println("Error: mismatched method signatures.");
+    //  printErrorMethod("Method should be: ", n.f2.f0, methodParams);
+    //  printErrorMethod("Method given: ", n.f2.f0, givenArgs);
+    //  System.exit(-1);
+    //}
 
     // Set return type in inheritedType and deepInheritedType
     SymbolData returnType = methodData.getReturnType();
