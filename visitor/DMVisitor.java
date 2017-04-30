@@ -114,7 +114,27 @@ public class DMVisitor extends DepthFirstVisitor {
     else return true;
   }
 
-  boolean noOverloading(Vector<NodeToken> classTokens) {
+  boolean noOverloading(ArrayList<NodeToken> classTokens) {
+    for (NodeToken classToken : classTokens) {
+      ClassData cd = (ClassData) symbolTable.getSymbolData(
+          classToken, SymbolType.ST_CLASS);
+
+      if (cd.getParent() != null) {
+        ClassData current = cd;
+        ClassData parent = (ClassData) symbolTable.getSymbolData(
+            current.getParent(), SymbolType.ST_CLASS);
+        while (parent != null) {
+          System.out.println("no overloading: " + current.getParent());
+          // compare methods
+          // grab parent's parent and compare methods
+          current = parent;
+          parent = null;
+          if (current.getParent() != null)
+            parent = (ClassData) symbolTable.getSymbolData(
+                current.getParent(), SymbolType.ST_CLASS);
+        }
+      }
+    }
     return true;
   }
 
@@ -191,6 +211,7 @@ public class DMVisitor extends DepthFirstVisitor {
   public void visit(Goal n) {
     // Verify distinct classes and methods, adds both to symbol table
     ArrayList<String> classnames = new ArrayList<String>();
+    ArrayList<NodeToken> classtokens = new ArrayList<NodeToken>();
     classnames.add(classname(n.f0));
     symbolTable.addSymbol(n.f0.f1.f0, new ClassData(n.f0.f1.f0));
 
@@ -203,6 +224,7 @@ public class DMVisitor extends DepthFirstVisitor {
       if(which == 0){//ClassDeclaration
         ClassDeclaration cd = (ClassDeclaration)choice;
         classnames.add(classname(cd));
+        classtokens.add(cd.f1.f0);
 
         // Note: do we need to add main class's main method above? Probably not.
         symbolTable.addSymbol(cd.f1.f0, new ClassData(cd.f1.f0)); // Add class
@@ -212,6 +234,7 @@ public class DMVisitor extends DepthFirstVisitor {
       else{//ClassExtendsDeclaration
         ClassExtendsDeclaration ced = (ClassExtendsDeclaration)choice;
         classnames.add(classname(ced));
+        classtokens.add(ced.f1.f0);
 
         symbolTable.addSymbol(ced.f1.f0, new ClassData(ced.f1.f0, ced.f3.f0));
         classRefChecker.notifyClassExists(ced.f1.f0);              // Notify class exists
@@ -233,7 +256,10 @@ public class DMVisitor extends DepthFirstVisitor {
       System.exit(-1);
     }
 
-    //if (noOverloading(
+    if (!noOverloading(classtokens)) {
+      System.err.println("Error: overloading is not allowed");
+      System.exit(-1);
+    }
 
     classRefChecker.checkClassesExisted();
 
