@@ -130,8 +130,6 @@ public class DMVisitor extends DepthFirstVisitor {
         for (MethodData md : cd.getMethods())
           cdMethodMap.put(md.getName().toString(), md);
 
-        System.out.println("no overloading: " + cd.getParent());
-
         // Cycle up the chain of parents
         NodeToken parentClassToken = cd.getParent();
         while (parent != null) {
@@ -152,8 +150,6 @@ public class DMVisitor extends DepthFirstVisitor {
           // Get higher up parent
           parentClassToken = parent.getParent();
           if (parentClassToken != null) {
-            System.out.println("no overloading: " + parentClassToken);
-
             parent = (ClassData) symbolTable.getSymbolData(
                 parentClassToken, SymbolType.ST_CLASS);
           } else
@@ -231,17 +227,28 @@ public class DMVisitor extends DepthFirstVisitor {
 
   //checks if childToken <= parentToken in class hierarchy
   boolean isSubtype(NodeToken childToken, NodeToken parentToken) {
+    Scope gs = symbolTable.getGlobalScope();
     //child's class data
-    ClassData cd = (ClassData) symbolTable.getSymbolData(
-        childToken, SymbolType.ST_CLASS);
+    ClassData cd = (ClassData) gs.getSymbolData(childToken, SymbolType.ST_CLASS);
+
+    if(cd == null){
+      System.out.println("cd doesnt exist...");
+      System.exit(-1);
+    }
 
     //base case
-    if(childToken.toString() == parentToken.toString())
+    if(childToken.toString() == parentToken.toString()){
+      System.out.println(childToken.toString() + " <= " + parentToken.toString());
       return true;
-    else if(cd.getParent() == null)
+    }
+    else if(cd.getParent() == null){
+      System.out.println(childToken.toString() + " !<= " + parentToken.toString());
       return false;
-    else
+    }
+    else{
+      System.out.println(childToken.toString() + " <= " + parentToken.toString() + "?");
       return isSubtype(cd.getParent(), parentToken);
+    }
   }
 
   /**
@@ -301,13 +308,6 @@ public class DMVisitor extends DepthFirstVisitor {
       System.err.println("Error: overloading is not allowed");
       System.exit(-1);
     }
-
-    // isSubtype tests. Can delete these if we feel good.
-    //System.out.println(isSubtype(classtokens.get(2), classtokens.get(1)));
-    //System.out.println(isSubtype(classtokens.get(3), classtokens.get(1)));
-    //System.out.println(isSubtype(classtokens.get(0), classtokens.get(1)));
-    //System.out.println(isSubtype(classtokens.get(3), classtokens.get(0)));
-    //System.out.println(isSubtype(classtokens.get(4), classtokens.get(0)));
 
     classRefChecker.checkClassesExisted();
 
@@ -660,11 +660,15 @@ public class DMVisitor extends DepthFirstVisitor {
 
     //todo: check if rhs type is <= lhs type
     if(lhs == SymbolType.ST_CLASS_VAR){
-      ClassData lhsCD = (ClassData)lhsSD;
-      ClassData rhsCD = (ClassData)getDeepInheritedType();
+      ClassVarData lhsCVD = (ClassVarData)lhsSD;
+      ClassVarData rhsCVD = (ClassVarData)getDeepInheritedType();
 
       //check if rhs <= lhs
-      if(!isSubtype(rhsCD.getClassName(), lhsCD.getClassName())){
+      NodeToken l = new NodeToken(lhsCVD.getDeepType());
+      NodeToken r = new NodeToken(rhsCVD.getDeepType());
+
+      if(!isSubtype(r, l)){
+        System.out.println(r.toString() + " not a subtype of " + l.toString());
         System.exit(-1);
       }
     }

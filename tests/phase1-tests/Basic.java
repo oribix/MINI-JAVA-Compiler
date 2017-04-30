@@ -1,7 +1,9 @@
 class Main {
 	public static void main(String[] s){
-	  B b;
+    A a;
+	  D d;
 		System.out.println(new B().run());
+    a = d;
 	}
 }
 
@@ -35,17 +37,17 @@ class B extends A{
     return cape;
   }
 }
-//class C extends B{
-//  public int africa(int cape) {
-//    return cape;
-//  }
-//}
-//class D extends C{
-//  public int africa(int cape) {
-//    return cape;
-//  }
-//  public int jump(int a, B b) {
-//    return a;
-//  }
-//}
-//class taco {}
+class C extends B{
+  public int africa(int cape) {
+    return cape;
+  }
+}
+class D extends C{
+  public int africa(int cape) {
+    return cape;
+  }
+  public int jump(int a, B b) {
+    return a;
+  }
+}
+class taco {}

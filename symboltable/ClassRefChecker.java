@@ -25,8 +25,6 @@ public class ClassRefChecker {
       nodes = classMap.get(classToken.toString());
     }
 
-    System.out.println("In verify: " + classToken);
-
     nodes.add(classToken);
   }
 
@@ -37,8 +35,6 @@ public class ClassRefChecker {
       methodMap.put(classToken.toString(), new Vector<>());
       data = methodMap.get(classToken.toString());
     }
-
-    System.out.println("In verify: " + classToken + ", " + methodData.getDeepType());
 
     data.add(methodData);
   }

@@ -55,11 +55,6 @@ public class Scope{
     }
     else
       scope.put(symbol, data);
-
-    // Debugging
-    System.out.println("pushed \"" + n + ": " + data.type + "," + data.getDeepType() +"\" into scope");
-    //for (Symbol s : scope.keySet())
-    //  System.out.println("in scope: " + s);
   }
 
   public SymbolData getSymbolData(NodeToken n, SymbolType type) {
