@@ -300,6 +300,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //exit class scope
     n.f17.accept(this);
     symbolTable.exitScope();
+    currentClassName = null;
   }
 
   ///**
@@ -334,6 +335,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //exit class scope
     n.f5.accept(this);
     symbolTable.exitScope();
+    currentClassName = null;
   }
 
   /**
@@ -365,6 +367,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //exit class scope
     n.f7.accept(this);
     symbolTable.exitScope();
+    currentClassName = null;
   }
 
   /**
@@ -563,11 +566,12 @@ public class DMVisitor extends DepthFirstVisitor {
 
     //lhs
     n.f0.accept(this);
-    SymbolData sd = symbolTable.getSymbolData(n.f0.f0, SymbolType.ST_VARIABLE);
-    if(sd == null){
+    SymbolData lhsSD = symbolTable.getSymbolData(n.f0.f0, SymbolType.ST_VARIABLE);
+    if(lhsSD == null){
       System.out.println("Symbol " + n.f0.f0.toString() + " does not exist");
       System.exit(-1);
     }
+    lhs = lhsSD.getType();
 
     n.f1.accept(this);
 
@@ -576,7 +580,13 @@ public class DMVisitor extends DepthFirstVisitor {
     rhs = inheritedType;
 
     n.f3.accept(this);
+    if(lhs != rhs) System.exit(-1);
+
     //todo: check if rhs type is <= lhs type
+    if(lhs == SymbolType.ST_CLASS_VAR){
+      SymbolData rhsSD = getDeepInheritedType();
+      //check if rhs <= lhs
+    }
   }
 
   /**
@@ -609,54 +619,66 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f6.accept(this);
   }
 
-  ///**
-  // * f0 -> "if"
-  // * f1 -> "("
-  // * f2 -> Expression()
-  // * f3 -> ")"
-  // * f4 -> Statement()
-  // * f5 -> "else"
-  // * f6 -> Statement()
-  // */
-  //public void visit(IfStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //  n.f5.accept(this);
-  //  n.f6.accept(this);
-  //}
+  /**
+   * f0 -> "if"
+   * f1 -> "("
+   * f2 -> Expression()
+   * f3 -> ")"
+   * f4 -> Statement()
+   * f5 -> "else"
+   * f6 -> Statement()
+   */
+  public void visit(IfStatement n) {
+    n.f0.accept(this);
 
-  ///**
-  // * f0 -> "while"
-  // * f1 -> "("
-  // * f2 -> Expression()
-  // * f3 -> ")"
-  // * f4 -> Statement()
-  // */
-  //public void visit(WhileStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //}
+    //Expression should evaluate to boolean
+    n.f1.accept(this);
+    n.f2.accept(this);
+    n.f3.accept(this);
+    typeCheck(SymbolType.ST_BOOLEAN);
 
-  ///**
-  // * f0 -> "System.out.println"
-  // * f1 -> "("
-  // * f2 -> Expression()
-  // * f3 -> ")"
-  // * f4 -> ";"
-  // */
-  //public void visit(PrintStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //}
+    n.f4.accept(this);
+    n.f5.accept(this);
+    n.f6.accept(this);
+  }
+
+  /**
+   * f0 -> "while"
+   * f1 -> "("
+   * f2 -> Expression()
+   * f3 -> ")"
+   * f4 -> Statement()
+   */
+  public void visit(WhileStatement n) {
+    n.f0.accept(this);
+
+    //Expression should evaluate to boolean
+    n.f1.accept(this);
+    n.f2.accept(this);
+    n.f3.accept(this);
+    typeCheck(SymbolType.ST_BOOLEAN);
+
+    n.f4.accept(this);
+  }
+
+  /**
+   * f0 -> "System.out.println"
+   * f1 -> "("
+   * f2 -> Expression()
+   * f3 -> ")"
+   * f4 -> ";"
+   */
+  public void visit(PrintStatement n) {
+    n.f0.accept(this);
+
+    //Expression should Evaluate to int
+    n.f1.accept(this);
+    n.f2.accept(this);
+    n.f3.accept(this);
+    typeCheck(SymbolType.ST_INT);
+
+    n.f4.accept(this);
+  }
 
   ///**
   // * f0 -> AndExpression()
