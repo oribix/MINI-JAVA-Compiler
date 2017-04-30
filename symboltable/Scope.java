@@ -90,7 +90,6 @@ public class Scope{
     System.out.println(classToken + "," + classData.getType() + " adds " + methodData.getDeepType());
   }
 
-  // Next Time: Test this method and use it to test if methods exist when used in code
   // Used by SymbolTable for retrieving methods
   // Should ONLY be used on global scope. This function fails otherwise.
   protected MethodData getMethodFromClass(NodeToken classToken, NodeToken methodToken) {
@@ -104,6 +103,10 @@ public class Scope{
     for (MethodData methodData : classData.getMethods())
       if (methodData.getName().toString().equals(methodName))
         return methodData;
+
+    // Parent class may have function
+    if (classData.getParent() != null)
+      return getMethodFromClass(classData.getParent(), methodToken);
 
     return null;
   }

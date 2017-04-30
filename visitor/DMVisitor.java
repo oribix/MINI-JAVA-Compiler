@@ -579,8 +579,10 @@ public class DMVisitor extends DepthFirstVisitor {
       // If class doesn't exist "yet", put it in backpatch list
       NodeToken classToken = ((Identifier) n.f0.choice).f0;
       deepInheritedType = new ClassVarData(classToken);
-      if (!symbolTable.classExists(classToken))
-        classRefChecker.verifyClassExists(classToken);
+      if (!symbolTable.classExists(classToken)) {
+        System.err.println("Error: class " + classToken + " does not exist");
+        System.exit(-1);
+      }
     }
   }
 
@@ -933,18 +935,13 @@ public class DMVisitor extends DepthFirstVisitor {
    * f5 -> ")"
    */
   public void visit(MessageSend n) {
-    // In sec: consider case where deepInheritedType isn't null, but variable is backpatched
-    // method should be backpatched too then.
-    // Insertion into backpatching list has to occur at parent of messageSend so we know what
-    // return type we need for the MethodData we put in classRefChecker for backpatching later.
-
     synthCalledMethod = true;
 
     //Primary Expression
     n.f0.accept(this);
     SymbolData callerData = getDeepInheritedType();
     if (callerData == null){
-      System.out.println("Error: Message Send case not handled yet.");
+      System.out.println("Error: Attempt to call method on type " + getInheritedType());
       System.exit(-1);
     }
 
@@ -960,40 +957,37 @@ public class DMVisitor extends DepthFirstVisitor {
     Vector<SymbolData> givenArgs = getSynthExprList();
     n.f5.accept(this);
 
-    // Get class type of caller from primary expression
     if (!symbolTable.classExists(new NodeToken(callerData.getDeepType()))) {
-      System.out.println("MessageSend: type that doesn't exist");
-      MethodData unknownMethod = 
-          new MethodData(n.f2.f0, new SymbolData(SymbolType.ST_UNKNOWN), givenArgs);
-      synthUnverifiedMethods.add(unknownMethod);
+      System.out.println("Error: class " + callerData.getDeepType() + " doesn't exist");
+      System.exit(-1);
     }
-    else {
-      MethodData methodData = symbolTable
-        .getMethodFromClass(new NodeToken(callerData.getDeepType()), n.f2.f0);
 
-      // Error check for method existing
-      if (methodData == null) {
-        System.err.println("Error: " + n.f2.f0 + " doesn't exist");
-        System.exit(-1);
-      }
+    // Get class type of caller from primary expression
+    MethodData methodData = symbolTable
+      .getMethodFromClass(new NodeToken(callerData.getDeepType()), n.f2.f0);
 
-      // Error check for correct argument types
-      Vector<SymbolData> methodParams = methodData.getParameterTypes();
-      if (!methodParams.equals(givenArgs)) {
-        System.err.println("Error: mismatched method signatures.");
-        printErrorMethod("Method should be: ", n.f2.f0, methodParams);
-        printErrorMethod("Method given: ", n.f2.f0, givenArgs);
-        System.exit(-1);
-      }
-
-      // Set return type in inheritedType and deepInheritedType
-      SymbolData returnType = methodData.getReturnType();
-      inheritedType = returnType.getType();
-      if (returnType.getType() == SymbolType.ST_CLASS_VAR)
-        deepInheritedType = returnType;
-
-      System.out.println(methodData.getDeepType() + " was called");
+    // Error check for method existing
+    if (methodData == null) {
+      System.err.println("Error: " + n.f2.f0 + " doesn't exist");
+      System.exit(-1);
     }
+
+    // Error check for correct argument types
+    Vector<SymbolData> methodParams = methodData.getParameterTypes();
+    if (!methodParams.equals(givenArgs)) {
+      System.err.println("Error: mismatched method signatures.");
+      printErrorMethod("Method should be: ", n.f2.f0, methodParams);
+      printErrorMethod("Method given: ", n.f2.f0, givenArgs);
+      System.exit(-1);
+    }
+
+    // Set return type in inheritedType and deepInheritedType
+    SymbolData returnType = methodData.getReturnType();
+    inheritedType = returnType.getType();
+    if (returnType.getType() == SymbolType.ST_CLASS_VAR)
+      deepInheritedType = returnType;
+
+    System.out.println(methodData.getDeepType() + " was called");
   }
 
   /**
