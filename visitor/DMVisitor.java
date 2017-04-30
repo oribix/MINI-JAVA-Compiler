@@ -143,8 +143,8 @@ public class DMVisitor extends DepthFirstVisitor {
               if (!md.equals(parentMd)) {
                 System.out.println("Error: " + classToken + "." 
                     + md.getName().toString() + "() overloads function " 
-                    + parentClassToken + "." + parentMd.getName().toString()) + "()";
-                System.exit(-1);
+                    + parentClassToken + "." + parentMd.getName().toString() + "()");
+                return false;
               }
             }
           }
@@ -229,6 +229,37 @@ public class DMVisitor extends DepthFirstVisitor {
     return new MethodData(md.f2.f0, returnData, mdVisitor.getSynthFormalParam());
   }
 
+  boolean isSubtype(NodeToken childToken, NodeToken parentToken) {
+    ClassData cd = (ClassData) symbolTable.getSymbolData(
+        childToken, SymbolType.ST_CLASS);
+
+    // If class has parent, look at parent methods
+    if (cd.getParent() != null) {
+      ClassData parent = (ClassData) symbolTable.getSymbolData(
+          cd.getParent(), SymbolType.ST_CLASS);
+
+      // Cycle up the chain of parents
+      NodeToken parentClassToken = cd.getParent();
+      while (parent != null) {
+        // Compare parent class name to desired parent class name
+        if (parentClassToken.toString().equals(parentToken.toString()))
+          return true;
+
+        // Get higher up parent
+        parentClassToken = parent.getParent();
+        if (parentClassToken != null) {
+          //System.out.println("isSubtype: " + parentClassToken);
+
+          parent = (ClassData) symbolTable.getSymbolData(
+              parentClassToken, SymbolType.ST_CLASS);
+        } else
+          parent = null;
+      }
+    }
+
+    return false;
+  }
+
   /**
    * f0 -> MainClass()
    * f1 -> ( TypeDeclaration() )*
@@ -286,6 +317,13 @@ public class DMVisitor extends DepthFirstVisitor {
       System.err.println("Error: overloading is not allowed");
       System.exit(-1);
     }
+
+    // isSubtype tests. Can delete these if we feel good.
+    //System.out.println(isSubtype(classtokens.get(2), classtokens.get(1)));
+    //System.out.println(isSubtype(classtokens.get(3), classtokens.get(1)));
+    //System.out.println(isSubtype(classtokens.get(0), classtokens.get(1)));
+    //System.out.println(isSubtype(classtokens.get(3), classtokens.get(0)));
+    //System.out.println(isSubtype(classtokens.get(4), classtokens.get(0)));
 
     classRefChecker.checkClassesExisted();
 
