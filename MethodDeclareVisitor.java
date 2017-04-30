@@ -1,4 +1,4 @@
-package visitor;
+import visitor.*;
 
 import java.util.Vector;
 

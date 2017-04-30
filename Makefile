@@ -3,11 +3,8 @@ all: clean Typecheck.class
 run: clean Typecheck.class
 	java Typecheck < tests/phase1-tests/Basic.java
 
-Typecheck.class: Typecheck.java visitor/DMVisitor.class
+Typecheck.class: Typecheck.java
 	javac Typecheck.java
-
-visitor/DMVisitor.class: visitor/DMVisitor.java 
-	javac visitor/DMVisitor.java
 
 clean:
 	rm -f *.class
