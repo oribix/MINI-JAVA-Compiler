@@ -7,13 +7,13 @@ class Main {
 
 class A {
   //B y;
-	//public int run() {
-	//	int x;
-	//	boolean y;
-	//	int[] z;
-	//	x = 1;
-	//	return x;
-	//}
+	public int run() {
+		int x;
+		boolean y;
+		int[] z;
+		x = 1;
+		return x;
+	}
 	public int jump(int a, B b) {
 	  return a;
 	}
@@ -29,5 +29,5 @@ class A {
   //}
 }
 
-//class B {
-//}
+class B {
+}

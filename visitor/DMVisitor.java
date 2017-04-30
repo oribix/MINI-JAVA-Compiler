@@ -9,12 +9,13 @@ public class DMVisitor extends DepthFirstVisitor {
   ClassRefChecker classRefChecker;      // Checks unknown class declarations and method calls
   SymbolType inheritedType;             // Basic type of object
   SymbolData deepInheritedType;         // "Deep" type refers to those with derived SymbolData objects
-  NodeToken inheritedClass;             // Used by MethodDeclaration (inherited from classDec)
   Vector<SymbolData> synthFormalParam;  // Used by MethodDeclaration (synthesized from FormalParam)
   Vector<SymbolData> synthExprList;     // Used by MessageSend (synthesized from ExprList)
   Vector<MethodData> synthUnverifiedMethods;  // Used by Statement and ClassDecl (synthesize from MessageSend)
   boolean synthCalledMethod;            // Used in Statements and methodDec to backpatch method return types
+  NodeToken currentClassName;
 
+  //Class Constructor
   public DMVisitor(){
     symbolTable = new SymbolTable();
     classRefChecker = new ClassRefChecker(symbolTable);
@@ -23,6 +24,7 @@ public class DMVisitor extends DepthFirstVisitor {
     synthFormalParam = new Vector<>();
     synthExprList = new Vector<>();
     synthUnverifiedMethods = new Vector<>();
+    currentClassName = null;
   }
 
   //makes sure inheritedType is of type st
@@ -43,33 +45,39 @@ public class DMVisitor extends DepthFirstVisitor {
     return it;
   }
 
+  //gets deep inherited type then resets it
   SymbolData getDeepInheritedType() {
     SymbolData data = deepInheritedType;
     deepInheritedType = null;
     return data;
   }
 
+  //returns the synthesized formal parameters
   Vector<SymbolData> getSynthFormalParam() {
     Vector<SymbolData> data = synthFormalParam;
     synthFormalParam = new Vector<>();
     return data;
   }
 
+  //returns the synthesized Expression list
   Vector<SymbolData> getSynthExprList() {
     Vector<SymbolData> data = synthExprList;
     synthExprList = new Vector<>();
     return data;
   }
 
+  //returns the Synthesized Unverified Methods
   Vector<MethodData> getSynthUnverifiedMethods() {
     Vector<MethodData> data = synthUnverifiedMethods;
     synthUnverifiedMethods = new Vector<>();
     return data;
   }
 
+  //--------------------------
   //suggested helper functions
+  //--------------------------
 
-  //returns class's name
+  //returns class's name given a class node
   String classname(MainClass mc){
     return mc.f1.f0.toString();
   }
@@ -81,23 +89,23 @@ public class DMVisitor extends DepthFirstVisitor {
   String classname(ClassExtendsDeclaration ced){
     return ced.f1.f0.toString();
   }
+  //--------------------
 
-  //returns a method's name
+  //returns a method's name given a method node
   String methodname(MethodDeclaration md){
     return md.f2.f0.toString();
   }
 
+  //returns true if the strings in idList are pairwise distinct
   boolean distinct(ArrayList<String> idList){
     HashSet hs = new HashSet<String>(idList);
-    if(hs.size() < idList.size()){
-      System.out.println("Error: non-Distinct");
-      return false;
-    }
-    else{
-      System.out.println("Distinct :D");
-      return true;
-    }
+    if(hs.size() < idList.size()) return false;
+    else return true;
   }
+
+  //--------------------------
+  //End suggested helper functions
+  //--------------------------
 
   boolean getSynthCalledMethod() {
     if (synthCalledMethod) {
@@ -176,6 +184,7 @@ public class DMVisitor extends DepthFirstVisitor {
       TypeDeclaration td = (TypeDeclaration)typeDeclaration;
       Node choice = td.f0.choice;
       int which = td.f0.which;
+
       if(which == 0){//ClassDeclaration
         ClassDeclaration cd = (ClassDeclaration)choice;
         classnames.add(classname(cd));
@@ -188,17 +197,18 @@ public class DMVisitor extends DepthFirstVisitor {
       else{//ClassExtendsDeclaration
         ClassExtendsDeclaration ced = (ClassExtendsDeclaration)choice;
         classnames.add(classname(ced));
-
         symbolTable.addSymbol(ced.f1.f0, SymbolType.ST_CLASS_EXTENDS);
       }
     }
 
+    //prints class names for debugging
     System.out.println("Class Names:");
     for(String cn : classnames){
       System.out.println(cn);
     }
     System.out.println();
 
+    //checks if classnames are distinct
     if(!distinct(classnames)){
       System.exit(-1);
     }
@@ -234,6 +244,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
+    currentClassName = n.f1.f0;
 
     //enter new scope for class
     n.f2.accept(this);
@@ -290,6 +301,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
+    currentClassName = n.f1.f0;
 
     //enter class scope
     n.f2.accept(this);
@@ -312,8 +324,6 @@ public class DMVisitor extends DepthFirstVisitor {
     //  System.exit(-1);
     //}
 
-    // Should only ever be assigned to by class dec or class dec extends
-    inheritedClass = n.f1.f0; 
 
     n.f4.accept(this);
 
@@ -339,6 +349,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //add class to symbol table
     n.f0.accept(this);
     n.f1.accept(this);
+    currentClassName = n.f1.f0;
 
     n.f2.accept(this);
     n.f3.accept(this);
@@ -411,7 +422,6 @@ public class DMVisitor extends DepthFirstVisitor {
 
     // Put methodData into containing class
     MethodData methodData = new MethodData(n.f2.f0, returnData, getSynthFormalParam());
-    //symbolTable.addMethodToClass(inheritedClass, methodData);
 
     n.f6.accept(this);
     n.f7.accept(this);
@@ -824,28 +834,36 @@ public class DMVisitor extends DepthFirstVisitor {
 
     synthCalledMethod = true;
 
-    n.f0.accept(this);  // PrimaryExpr
+    //Primary Expression
+    n.f0.accept(this);
     SymbolData callerData = getDeepInheritedType();
+    if (callerData == null){
+      System.out.println("Error: Message Send case not handled yet.");
+      System.exit(-1);
+    }
+
     n.f1.accept(this);
+
+    //methodname
     n.f2.accept(this);
+    System.out.println("Method: " + n.f2.f0);
+
+    //Expression List
     n.f3.accept(this);
-    n.f4.accept(this);  // ExprList
+    n.f4.accept(this);
     Vector<SymbolData> givenArgs = getSynthExprList();
     n.f5.accept(this);
 
-    System.out.println("Method: " + n.f2.f0);
-
     // Get class type of caller from primary expression
-    if (callerData == null)
-      System.out.println("Error: Message Send case not handled yet.");
-    else if (!symbolTable.classExists(new NodeToken(callerData.getDeepType()))) {
+    if (!symbolTable.classExists(new NodeToken(callerData.getDeepType()))) {
       System.out.println("MessageSend: type that doesn't exist");
       MethodData unknownMethod = 
           new MethodData(n.f2.f0, new SymbolData(SymbolType.ST_UNKNOWN), givenArgs);
       synthUnverifiedMethods.add(unknownMethod);
-    } else {
+    }
+    else {
       MethodData methodData = symbolTable
-          .getMethodFromClass(new NodeToken(callerData.getDeepType()), n.f2.f0);
+        .getMethodFromClass(new NodeToken(callerData.getDeepType()), n.f2.f0);
 
       // Error check for method existing
       if (methodData == null) {
@@ -973,28 +991,21 @@ public class DMVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_BOOLEAN;
   }
 
-  /**
-   * f0 -> <IDENTIFIER>
-   */
-  public void visit(Identifier n) {
-    n.f0.accept(this);
-
-    //inheritedType = SymbolType.ST_CLASS_VAR;
-    //deepInheritedType = new ClassVarData(n.f0);
-
-    //ST_CLASS_VAR
-    //System.out.println(n.f0 + " is class var of type " + deepInheritedType.getDeepType());
-    //deepInheritedType = null; // Reset deep type
-
-    //inheritedType = SymbolType.ST_NULL;
-  }
-
   ///**
-  // * f0 -> "this"
+  // * f0 -> <IDENTIFIER>
   // */
-  //public void visit(ThisExpression n) {
+  //public void visit(Identifier n) {
   //  n.f0.accept(this);
   //}
+
+  /**
+   * f0 -> "this"
+   */
+  public void visit(ThisExpression n) {
+    n.f0.accept(this);
+    inheritedType = SymbolType.ST_CLASS_VAR;
+    deepInheritedType = new ClassVarData(currentClassName);
+  }
 
   /**
    * f0 -> "new"
@@ -1015,18 +1026,21 @@ public class DMVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_INT_ARR;
   }
 
-  ///**
-  // * f0 -> "new"
-  // * f1 -> Identifier()
-  // * f2 -> "("
-  // * f3 -> ")"
-  // */
-  //public void visit(AllocationExpression n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //}
+  /**
+   * f0 -> "new"
+   * f1 -> Identifier()
+   * f2 -> "("
+   * f3 -> ")"
+   */
+  public void visit(AllocationExpression n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+    n.f3.accept(this);
+
+    inheritedType = SymbolType.ST_CLASS_VAR;
+    deepInheritedType = new ClassVarData(n.f1.f0);
+  }
 
   /**
    * f0 -> "!"
