@@ -279,6 +279,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //exit class scope
     n.f17.accept(this);
     symbolTable.exitScope();
+    currentClassName = null;
   }
 
   ///**
@@ -308,31 +309,12 @@ public class DMVisitor extends DepthFirstVisitor {
     symbolTable.newScope();
 
     n.f3.accept(this);
-    //ArrayList<String> methodNames = new ArrayList<String>();
-    //for(Node node : n.f4.nodes){
-    //  methodNames.add(methodname((MethodDeclaration)node));
-    //}
-
-    //System.out.println("\nmethod names:");
-    //for(String s : methodNames){
-    //  System.out.println(s);
-    //}
-    //System.out.println();
-
-    //if(!distinct(methodNames)){
-    //  System.out.println("Methods not distinct!");
-    //  System.exit(-1);
-    //}
-
-
     n.f4.accept(this);
 
     //exit class scope
     n.f5.accept(this);
     symbolTable.exitScope();
-
-    // Class and methods now in symbol table. Do backpatch check.
-    //classRefChecker.notifyClassExists(n.f1.f0);
+    currentClassName = null;
   }
 
   /**
@@ -364,9 +346,7 @@ public class DMVisitor extends DepthFirstVisitor {
     //exit class scope
     n.f7.accept(this);
     symbolTable.exitScope();
-
-    // Class and methods now in symbol table. Do backpatch check.
-    //classRefChecker.notifyClassExists(n.f1.f0);
+    currentClassName = null;
   }
 
   /**
