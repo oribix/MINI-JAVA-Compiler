@@ -229,35 +229,19 @@ public class DMVisitor extends DepthFirstVisitor {
     return new MethodData(md.f2.f0, returnData, mdVisitor.getSynthFormalParam());
   }
 
+  //checks if childToken <= parentToken in class hierarchy
   boolean isSubtype(NodeToken childToken, NodeToken parentToken) {
+    //child's class data
     ClassData cd = (ClassData) symbolTable.getSymbolData(
         childToken, SymbolType.ST_CLASS);
 
-    // If class has parent, look at parent methods
-    if (cd.getParent() != null) {
-      ClassData parent = (ClassData) symbolTable.getSymbolData(
-          cd.getParent(), SymbolType.ST_CLASS);
-
-      // Cycle up the chain of parents
-      NodeToken parentClassToken = cd.getParent();
-      while (parent != null) {
-        // Compare parent class name to desired parent class name
-        if (parentClassToken.toString().equals(parentToken.toString()))
-          return true;
-
-        // Get higher up parent
-        parentClassToken = parent.getParent();
-        if (parentClassToken != null) {
-          //System.out.println("isSubtype: " + parentClassToken);
-
-          parent = (ClassData) symbolTable.getSymbolData(
-              parentClassToken, SymbolType.ST_CLASS);
-        } else
-          parent = null;
-      }
-    }
-
-    return false;
+    //base case
+    if(childToken.toString() == parentToken.toString())
+      return true;
+    else if(cd.getParent() == null)
+      return false;
+    else
+      return isSubtype(cd.getParent(), parentToken);
   }
 
   /**
@@ -677,10 +661,10 @@ public class DMVisitor extends DepthFirstVisitor {
       ClassData lhsCD = (ClassData)lhsSD;
       ClassData rhsCD = (ClassData)getDeepInheritedType();
 
-      ////check if rhs <= lhs
-      //if(!isSubtype(rhsCD.getClassName(), lhsCD.getClassName())){
-      //  System.exit(-1);
-      //}
+      //check if rhs <= lhs
+      if(!isSubtype(rhsCD.getClassName(), lhsCD.getClassName())){
+        System.exit(-1);
+      }
     }
   }
 
