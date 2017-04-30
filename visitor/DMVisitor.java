@@ -636,8 +636,13 @@ public class DMVisitor extends DepthFirstVisitor {
 
     //todo: check if rhs type is <= lhs type
     if(lhs == SymbolType.ST_CLASS_VAR){
-      SymbolData rhsSD = getDeepInheritedType();
-      //check if rhs <= lhs
+      ClassData lhsCD = (ClassData)lhsSD;
+      ClassData rhsCD = (ClassData)getDeepInheritedType();
+
+      ////check if rhs <= lhs
+      //if(!isSubtype(rhsCD.getClassName(), lhsCD.getClassName())){
+      //  System.exit(-1);
+      //}
     }
   }
 
