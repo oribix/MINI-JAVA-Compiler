@@ -1,0 +1,22 @@
+In notify: Fac
+Fac,ST_CLASS adds (ST_INT)->ST_INT
+
+method names:
+ComputeFac
+
+Class Names:
+Factorial
+Fac
+
+Debug in ClassRefChecker: list is empty, good job.
+Method: ComputeFac
+(ST_INT)->ST_INT was called
+Statement: Method was called!
+PrimaryExpression: num, ST_INT
+PrimaryExpression: num, ST_INT
+Method: ComputeFac
+PrimaryExpression: num, ST_INT
+(ST_INT)->ST_INT was called
+Statement: Method was called!
+PrimaryExpression: num_aux, ST_INT
+Java program parsed successfully.
