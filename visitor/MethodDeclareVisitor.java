@@ -11,7 +11,7 @@ class MethodDeclareVisitor extends DMVisitor {
   public Vector<NodeToken> unverifiedClasses; // Pass this back to DMVisitor
 
   public MethodDeclareVisitor(SymbolTable st) {
-    symbolTable = new SymbolTable();
+    symbolTable = st;
     synthFormalParam = new Vector<>();
     unverifiedClasses = new Vector<>();
   }
@@ -36,8 +36,6 @@ class MethodDeclareVisitor extends DMVisitor {
   }
 
   /**
-   * Note: FormalParameter is ONLY used by MethodDeclaration
-   * 
    * f0 -> Type()
    * f1 -> Identifier()
    */

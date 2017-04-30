@@ -38,6 +38,17 @@ public class DMVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_NULL;
   }
 
+  //makes sure inheritedType is of type st
+  //then resets inheretedType
+  void deepTypeCheck(SymbolData sd){
+    if(!deepInheritedType.equals(sd)){
+      System.out.println("Error: Unexpected Type" + deepInheritedType.getFormalType());
+      System.out.println("Expecting " + sd.getFormalType());
+      System.exit(-1);
+    }
+    deepInheritedType = null;
+  }
+
   //gets the inherited type then resets it
   SymbolType getInheritedType(){
     SymbolType it = inheritedType;
@@ -101,6 +112,10 @@ public class DMVisitor extends DepthFirstVisitor {
     HashSet hs = new HashSet<String>(idList);
     if(hs.size() < idList.size()) return false;
     else return true;
+  }
+
+  boolean noOverloading(Vector<NodeToken> classTokens) {
+    return true;
   }
 
   //--------------------------
@@ -197,7 +212,12 @@ public class DMVisitor extends DepthFirstVisitor {
       else{//ClassExtendsDeclaration
         ClassExtendsDeclaration ced = (ClassExtendsDeclaration)choice;
         classnames.add(classname(ced));
-        symbolTable.addSymbol(ced.f1.f0, SymbolType.ST_CLASS_EXTENDS);
+
+        symbolTable.addSymbol(ced.f1.f0, new ClassData(ced.f1.f0, ced.f3.f0));
+        classRefChecker.notifyClassExists(ced.f1.f0);              // Notify class exists
+        checkAndAddClassMethods(ced.f1.f0, ced.f6);                 // Add methods
+
+        System.out.println("Parent class: " + ced.f3.f0);
       }
     }
 
@@ -212,6 +232,8 @@ public class DMVisitor extends DepthFirstVisitor {
     if(!distinct(classnames)){
       System.exit(-1);
     }
+
+    //if (noOverloading(
 
     classRefChecker.checkClassesExisted();
 
@@ -254,7 +276,6 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f4.accept(this);
     n.f5.accept(this);
     n.f6.accept(this);
-    //symbolTable.addMethodToClass(n.f1.f0, MethodData.mainInstance(n.f6));
 
     //enter new scope for main
     n.f7.accept(this);
@@ -308,31 +329,11 @@ public class DMVisitor extends DepthFirstVisitor {
     symbolTable.newScope();
 
     n.f3.accept(this);
-    //ArrayList<String> methodNames = new ArrayList<String>();
-    //for(Node node : n.f4.nodes){
-    //  methodNames.add(methodname((MethodDeclaration)node));
-    //}
-
-    //System.out.println("\nmethod names:");
-    //for(String s : methodNames){
-    //  System.out.println(s);
-    //}
-    //System.out.println();
-
-    //if(!distinct(methodNames)){
-    //  System.out.println("Methods not distinct!");
-    //  System.exit(-1);
-    //}
-
-
     n.f4.accept(this);
 
     //exit class scope
     n.f5.accept(this);
     symbolTable.exitScope();
-
-    // Class and methods now in symbol table. Do backpatch check.
-    //classRefChecker.notifyClassExists(n.f1.f0);
   }
 
   /**
@@ -364,9 +365,6 @@ public class DMVisitor extends DepthFirstVisitor {
     //exit class scope
     n.f7.accept(this);
     symbolTable.exitScope();
-
-    // Class and methods now in symbol table. Do backpatch check.
-    //classRefChecker.notifyClassExists(n.f1.f0);
   }
 
   /**
@@ -402,8 +400,7 @@ public class DMVisitor extends DepthFirstVisitor {
    * f12 -> "}"
    */
   public void visit(MethodDeclaration n) {
-    // enter method scope
-    symbolTable.newScope();
+    symbolTable.newScope(); // formal params scope
     n.f0.accept(this);
     n.f1.accept(this);
 
@@ -414,15 +411,8 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
+    symbolTable.newScope(); // declared variables scope
     n.f5.accept(this);
-
-    // Convert SymbolType to SymbolData if need be
-    if (returnData == null)
-      returnData = new SymbolData(returnType);
-
-    // Put methodData into containing class
-    MethodData methodData = new MethodData(n.f2.f0, returnData, getSynthFormalParam());
-
     n.f6.accept(this);
     n.f7.accept(this);
     n.f8.accept(this);
@@ -431,10 +421,14 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f11.accept(this);
     n.f12.accept(this);
 
-    // To do: Typecheck the return value
+    // Typecheck expression return value
+    typeCheck(returnType);
+    if (returnType == SymbolType.ST_CLASS_VAR)
+      deepTypeCheck(returnData);
 
     // exit method scope
-    symbolTable.exitScope();
+    symbolTable.exitScope();  // varDec
+    symbolTable.exitScope();  // formalParam
   }
 
   ///**

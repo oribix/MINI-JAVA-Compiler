@@ -7,6 +7,7 @@ class Main {
 
 class A {
   //B y;
+  int c;
 	public int run() {
 		int x;
 		boolean y;
@@ -15,7 +16,7 @@ class A {
 		return x;
 	}
 	public int jump(int a, B b) {
-	  return a;
+	  return c;
 	}
 	//public boolean debugger(int cat, boolean dog, int[] bird, A lizard) {
   //  A w;
@@ -29,5 +30,8 @@ class A {
   //}
 }
 
-class B {
+class B extends A{
+  public int africa(int cape) {
+    return cape;
+  }
 }
