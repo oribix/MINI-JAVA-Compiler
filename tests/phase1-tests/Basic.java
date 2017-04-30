@@ -35,13 +35,16 @@ class B extends A{
     return cape;
   }
 }
-//class C extends B{
-//  public int africa(int cape) {
-//    return cape;
-//  }
-//}
-//class D extends C{
-//  public int africa(int cape) {
-//    return cape;
-//  }
-//}
+class C extends B{
+  public int africa(int cape) {
+    return cape;
+  }
+}
+class D extends C{
+  public int africa(int cape) {
+    return cape;
+  }
+  public boolean jump(int a, B b) {
+    return a;
+  }
+}

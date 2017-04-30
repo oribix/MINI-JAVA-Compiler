@@ -115,23 +115,49 @@ public class DMVisitor extends DepthFirstVisitor {
   }
 
   boolean noOverloading(ArrayList<NodeToken> classTokens) {
+    // Check all classes in scope
     for (NodeToken classToken : classTokens) {
       ClassData cd = (ClassData) symbolTable.getSymbolData(
           classToken, SymbolType.ST_CLASS);
 
+      // If class has parent, look at parent methods
       if (cd.getParent() != null) {
-        ClassData current = cd;
         ClassData parent = (ClassData) symbolTable.getSymbolData(
-            current.getParent(), SymbolType.ST_CLASS);
+            cd.getParent(), SymbolType.ST_CLASS);
+
+        // Put class' methods in hashmap for easy access
+        HashMap<String, MethodData> cdMethodMap = new HashMap<>();
+        for (MethodData md : cd.getMethods())
+          cdMethodMap.put(md.getName().toString(), md);
+
+        System.out.println("no overloading: " + cd.getParent());
+
+        // Cycle up the chain of parents
+        NodeToken parentClassToken = cd.getParent();
         while (parent != null) {
-          System.out.println("no overloading: " + current.getParent());
-          // compare methods
-          // grab parent's parent and compare methods
-          current = parent;
-          parent = null;
-          if (current.getParent() != null)
+          // Compare methodData objects of parent and child
+          for (MethodData md : parent.getMethods()) {
+            MethodData parentMd = cdMethodMap.get(md.getName().toString());
+
+            if (parentMd != null) {
+              if (!md.equals(parentMd)) {
+                System.out.println("Error: " + classToken + "." 
+                    + md.getName().toString() + "() overloads function " 
+                    + parentClassToken + "." + parentMd.getName().toString()) + "()";
+                System.exit(-1);
+              }
+            }
+          }
+
+          // Get higher up parent
+          parentClassToken = parent.getParent();
+          if (parentClassToken != null) {
+            System.out.println("no overloading: " + parentClassToken);
+
             parent = (ClassData) symbolTable.getSymbolData(
-                current.getParent(), SymbolType.ST_CLASS);
+                parentClassToken, SymbolType.ST_CLASS);
+          } else
+            parent = null;
         }
       }
     }
