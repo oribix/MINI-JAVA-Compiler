@@ -44,7 +44,8 @@ class D extends C{
   public int africa(int cape) {
     return cape;
   }
-  public boolean jump(int a, B b) {
+  public int jump(int a, B b) {
     return a;
   }
 }
+class taco {}
