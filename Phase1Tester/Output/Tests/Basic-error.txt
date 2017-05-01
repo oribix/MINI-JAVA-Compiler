@@ -1,0 +1,15 @@
+In notify: A
+A,ST_CLASS adds ()->ST_INT
+
+method names:
+run
+
+Class Names:
+Main
+A
+
+Debug in ClassRefChecker: list is empty, good job.
+Method: run
+()->ST_INT was called
+Statement: Method was called!
+Symbol y does not exist

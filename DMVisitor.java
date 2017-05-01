@@ -1,4 +1,4 @@
-package visitor;
+import visitor.*;
 import syntaxtree.*;
 import symboltable.*;
 import java.util.*;
