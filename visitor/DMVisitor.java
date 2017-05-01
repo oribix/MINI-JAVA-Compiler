@@ -31,8 +31,8 @@ public class DMVisitor extends DepthFirstVisitor {
   //then resets inheretedType
   void typeCheck(SymbolType st){
     if(inheritedType != st){
-      System.out.println("Error: Unexpected Type" + inheritedType);
-      System.out.println("Expecting " + st);
+      System.err.println("Error: Unexpected Type " + inheritedType);
+      System.err.println("Expecting " + st);
       System.exit(-1);
     }
     inheritedType = SymbolType.ST_NULL;
@@ -42,8 +42,8 @@ public class DMVisitor extends DepthFirstVisitor {
   //then resets inheretedType
   void deepTypeCheck(SymbolData sd){
     if(!deepInheritedType.equals(sd)){
-      System.out.println("Error: Unexpected Type" + deepInheritedType.getFormalType());
-      System.out.println("Expecting " + sd.getFormalType());
+      System.err.println("Error: Unexpected Type" + deepInheritedType.getFormalType());
+      System.err.println("Expecting " + sd.getFormalType());
       System.exit(-1);
     }
     deepInheritedType = null;
@@ -107,6 +107,11 @@ public class DMVisitor extends DepthFirstVisitor {
     return md.f2.f0.toString();
   }
 
+  //returns a method's name given a method node
+  String varname(VarDeclaration vd){
+    return vd.f1.f0.toString();
+  }
+
   //returns true if the strings in idList are pairwise distinct
   boolean distinct(ArrayList<String> idList){
     HashSet hs = new HashSet<String>(idList);
@@ -139,7 +144,7 @@ public class DMVisitor extends DepthFirstVisitor {
 
             if (parentMd != null) {
               if (!md.equals(parentMd)) {
-                System.out.println("Error: " + classToken + "." 
+                System.err.println("Error: " + classToken + "." 
                     + md.getName().toString() + "() overloads function " 
                     + parentClassToken + "." + parentMd.getName().toString() + "()");
                 return false;
@@ -186,6 +191,7 @@ public class DMVisitor extends DepthFirstVisitor {
   }
 
   void checkAndAddClassMethods(NodeToken classToken, NodeListOptional n) {
+    // Get method names and add methods to symboltable
     ArrayList<String> methodNames = new ArrayList<String>();
     for(Node node : n.nodes){
       MethodDeclaration md = (MethodDeclaration)node;
@@ -193,14 +199,40 @@ public class DMVisitor extends DepthFirstVisitor {
       symbolTable.addMethodToClass(classToken, readMethod(md));
     }
 
+    // Output method names
     System.out.println("\nmethod names:");
     for(String s : methodNames){
       System.out.println(s);
     }
     System.out.println();
 
+    // Test for distinct method names
     if(!distinct(methodNames)){
-      System.out.println("Methods not distinct!");
+      System.err.println("Methods not distinct!");
+      System.exit(-1);
+    }
+  }
+
+  void checkAndAddFields(NodeToken classToken, NodeListOptional n) {
+    // Get method names and add methods to symboltable
+    ArrayList<String> varNames = new ArrayList<String>();
+    for(Node node : n.nodes){
+      VarDeclaration vd = (VarDeclaration)node;
+      varNames.add(varname(vd));
+      VarPair vp  = readVar(vd);
+      symbolTable.addFieldVarToClass(classToken, vp.nameToken, vp.varData);
+    }
+
+    // Output method names
+    System.out.println("\nvar names:");
+    for(String s : varNames){
+      System.out.println(s);
+    }
+    System.out.println();
+
+    // Test for distinct method names
+    if(!distinct(varNames)){
+      System.err.println("Class fields not distinct!");
       System.exit(-1);
     }
   }
@@ -225,6 +257,23 @@ public class DMVisitor extends DepthFirstVisitor {
     return new MethodData(md.f2.f0, returnData, mdVisitor.getSynthFormalParam());
   }
 
+  VarPair readVar(VarDeclaration vd) {
+    MethodDeclareVisitor vdVisitor = new MethodDeclareVisitor(symbolTable);
+
+    // Get type of variable
+    vd.accept(vdVisitor);
+    SymbolType type = vdVisitor.getInheritedType();
+    SymbolData deepType = vdVisitor.getDeepInheritedType();
+    if (deepType == null)
+      deepType = new SymbolData(type);
+
+    // Add unverified classes to ClassRefChecker
+    for (NodeToken classToken : vdVisitor.unverifiedClasses)
+      classRefChecker.verifyClassExists(classToken);
+
+    return new VarPair(vd.f1.f0, deepType);
+  }
+
   //checks if childToken <= parentToken in class hierarchy
   boolean isSubtype(NodeToken childToken, NodeToken parentToken) {
     Scope gs = symbolTable.getGlobalScope();
@@ -232,7 +281,7 @@ public class DMVisitor extends DepthFirstVisitor {
     ClassData cd = (ClassData) gs.getSymbolData(childToken, SymbolType.ST_CLASS);
 
     if(cd == null){
-      System.out.println("cd doesnt exist...");
+      System.err.println("cd doesnt exist...");
       System.exit(-1);
     }
 
@@ -278,6 +327,7 @@ public class DMVisitor extends DepthFirstVisitor {
         symbolTable.addSymbol(cd.f1.f0, new ClassData(cd.f1.f0)); // Add class
         classRefChecker.notifyClassExists(cd.f1.f0);              // Notify class exists
         checkAndAddClassMethods(cd.f1.f0, cd.f4);                 // Add methods
+        checkAndAddFields(cd.f1.f0, cd.f3);
       }
       else{//ClassExtendsDeclaration
         ClassExtendsDeclaration ced = (ClassExtendsDeclaration)choice;
@@ -287,6 +337,7 @@ public class DMVisitor extends DepthFirstVisitor {
         symbolTable.addSymbol(ced.f1.f0, new ClassData(ced.f1.f0, ced.f3.f0));
         classRefChecker.notifyClassExists(ced.f1.f0);              // Notify class exists
         checkAndAddClassMethods(ced.f1.f0, ced.f6);                 // Add methods
+        checkAndAddFields(ced.f1.f0, ced.f5);
 
         System.out.println("Parent class: " + ced.f3.f0);
       }
@@ -642,9 +693,9 @@ public class DMVisitor extends DepthFirstVisitor {
 
     //lhs
     n.f0.accept(this);
-    SymbolData lhsSD = symbolTable.getSymbolData(n.f0.f0, SymbolType.ST_VARIABLE);
+    SymbolData lhsSD = symbolTable.getSymbolData(n.f0.f0, SymbolType.ST_VARIABLE, currentClassName);
     if(lhsSD == null){
-      System.out.println("Symbol " + n.f0.f0.toString() + " does not exist");
+      System.err.println("Symbol " + n.f0.f0.toString() + " does not exist");
       System.exit(-1);
     }
     lhs = lhsSD.getType();
@@ -668,7 +719,7 @@ public class DMVisitor extends DepthFirstVisitor {
       NodeToken r = new NodeToken(rhsCVD.getDeepType());
 
       if(!isSubtype(r, l)){
-        System.out.println(r.toString() + " not a subtype of " + l.toString());
+        System.err.println(r.toString() + " not a subtype of " + l.toString());
         System.exit(-1);
       }
     }
@@ -686,7 +737,7 @@ public class DMVisitor extends DepthFirstVisitor {
   public void visit(ArrayAssignmentStatement n) {
     //array id
     n.f0.accept(this);
-    inheritedType = symbolTable.getSymbolData(n.f0.f0, SymbolType.ST_VARIABLE).getType();
+    inheritedType = symbolTable.getSymbolData(n.f0.f0, SymbolType.ST_VARIABLE, currentClassName).getType();
     typeCheck(SymbolType.ST_INT_ARR);
 
     //array index
@@ -934,7 +985,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     SymbolData callerData = getDeepInheritedType();
     if (callerData == null){
-      System.out.println("Error: Attempt to call method on type " + getInheritedType());
+      System.err.println("Error: Attempt to call method on type " + getInheritedType());
       System.exit(-1);
     }
 
@@ -951,7 +1002,7 @@ public class DMVisitor extends DepthFirstVisitor {
     n.f5.accept(this);
 
     if (!symbolTable.classExists(new NodeToken(callerData.getDeepType()))) {
-      System.out.println("Error: class " + callerData.getDeepType() + " doesn't exist");
+      System.err.println("Error: class " + callerData.getDeepType() + " doesn't exist");
       System.exit(-1);
     }
 
@@ -1071,7 +1122,7 @@ public class DMVisitor extends DepthFirstVisitor {
     // To check if variable exists (identifiers). If so, grab its type.
     if (n.f0.which == 3) {
       NodeToken varName = ((Identifier) n.f0.choice).f0;
-      SymbolData data = symbolTable.getSymbolData(varName, SymbolType.ST_VARIABLE);
+      SymbolData data = symbolTable.getSymbolData(varName, SymbolType.ST_VARIABLE, currentClassName);
 
       if (data == null) {
         System.err.println("Error: variable " + varName + " not in scope");
@@ -1082,7 +1133,8 @@ public class DMVisitor extends DepthFirstVisitor {
       if (data.getType() == SymbolType.ST_CLASS_VAR)
         deepInheritedType = data;
 
-      System.out.println("PrimaryExpression: " + varName + ", " + data.getFormalType());
+      System.out.println("PrimaryExpression: " + varName + ", " + data.getFormalType() 
+          + " at line " + varName.beginLine);
     }
   }
 
@@ -1191,4 +1243,12 @@ public class DMVisitor extends DepthFirstVisitor {
   //  n.f2.accept(this);
   //}
 
+  class VarPair {
+    NodeToken nameToken; 
+    SymbolData varData;
+    VarPair(NodeToken nameToken, SymbolData varData) {
+      this.nameToken = nameToken;
+      this.varData = varData;
+    }
+  }
 }

@@ -52,4 +52,21 @@ class MethodDeclareVisitor extends DMVisitor {
     else
       synthFormalParam.add(sd);
   }
+
+  /**
+   * f0 -> Type()
+   * f1 -> Identifier()
+   * f2 -> ";"
+   */
+  public void visit(VarDeclaration n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+
+    //SymbolType st = getInheritedType();
+    //if(st == SymbolType.ST_CLASS_VAR)
+    //  symbolTable.addSymbol(n.f1.f0, getDeepInheritedType());
+    //else
+    //  symbolTable.addSymbol(n.f1.f0, st);
+  }
 }

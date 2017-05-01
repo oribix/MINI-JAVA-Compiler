@@ -46,10 +46,42 @@ public class SymbolTable{
   //returns Symbol Data of the node passed in if it exists in the Symbol table
   //else null
   public SymbolData getSymbolData(NodeToken n, SymbolType st){
+    // Check stack of scopes
     for(Scope scope : scopeStack){
       SymbolData sd = scope.getSymbolData(n, st);
       if(sd != null) return sd;
     }
+
+    return null;
+  }
+
+  //returns Symbol Data of the node passed in if it exists in the Symbol table
+  //else null
+  public SymbolData getSymbolData(NodeToken varToken, SymbolType st, NodeToken classToken){
+    // Normal getSymbolData()
+    SymbolData sd = getSymbolData(varToken, st);
+
+    if (sd != null) return sd;
+
+    // Check parents' class fields
+    return getFieldVar(varToken, classToken);
+  }
+
+  private SymbolData getFieldVar(NodeToken varToken, NodeToken classToken) {
+    if (varToken == null || classToken == null)
+      return null;
+
+    ClassData cd = (ClassData) getGlobalScope().getSymbolData(classToken, SymbolType.ST_CLASS);
+
+    if (cd != null) {
+      SymbolData fieldData = cd.getFieldVar(varToken);
+
+      if (fieldData != null)
+        return fieldData;
+
+      return getFieldVar(varToken, cd.getParent());
+    }
+
     return null;
   }
 
@@ -68,10 +100,7 @@ public class SymbolTable{
   }
 
   public boolean classExists(NodeToken n) {
-    if (getGlobalScope().getSymbolData(n, SymbolType.ST_CLASS) != null)
-      return true;
-
-    return getGlobalScope().getSymbolData(n, SymbolType.ST_CLASS_EXTENDS) != null;
+    return getGlobalScope().getSymbolData(n, SymbolType.ST_CLASS) != null;
   }
 
   public void addMethodToClass(NodeToken classToken, MethodData methodData) {
@@ -84,4 +113,12 @@ public class SymbolTable{
     // Later: edit this function to look at extended class parents
     return getGlobalScope().getMethodFromClass(classToken, methodToken);
   }
+
+  public void addFieldVarToClass(NodeToken classToken, NodeToken n, SymbolData data) {
+    getGlobalScope().addFieldVarToClass(classToken, n, data);
+
+    //getGlobalScope().PrintAll();
+  }
+
+
 }

@@ -106,6 +106,17 @@ public class Scope{
     return null;
   }
 
+  public void addFieldVarToClass(NodeToken classToken, NodeToken n, SymbolData data) {
+    if (!scopeClasses.containsKey(new Symbol(classToken))) {
+      System.err.println("error: attempted to add method in non-global scope\n");
+      System.exit(-1);
+    }
+
+    ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+    classData.addFieldVar(n, data);
+    System.out.println(classToken + "," + classData.getType() + " adds " + n + ", " + data.getFormalType());
+  }
+
   // Debugging code
   public void PrintAll() {
     System.out.println("Classes:");

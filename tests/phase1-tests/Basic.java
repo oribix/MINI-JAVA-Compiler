@@ -8,7 +8,10 @@ class Main {
 }
 
 class A {
-  //B y;
+  A a;
+  B b;
+  C c;
+  int horn;
 	public int run() {
 		int x;
 		boolean y;
@@ -34,17 +37,17 @@ class A {
 
 class B extends A{
   public int africa(int cape) {
-    return cape;
+    return horn;
   }
 }
 class C extends B{
   public int africa(int cape) {
-    return cape;
+    return horn;
   }
 }
 class D extends C{
   public int africa(int cape) {
-    return cape;
+    return horn;
   }
   public int jump(int a, B b) {
     return a;
