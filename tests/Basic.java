@@ -17,8 +17,9 @@ class A {
 		boolean y;
 		int[] z;
 		x = 1;
-		return x;
+		return this.debugger();
 	}
+	public boolean debugger() {return b;}
 	//public int jump(int a, B b) {
 	//  return c;
 	//}

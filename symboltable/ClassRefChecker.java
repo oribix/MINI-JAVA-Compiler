@@ -30,18 +30,23 @@ public class ClassRefChecker {
   public void notifyClassExists(NodeToken classToken) {
     classMap.remove(classToken.toString());
 
-    System.out.println("In notify: " + classToken);
+    //System.out.println("In notify: " + classToken);
   }
 
   // Called at end of Goal to ensure no classes were unverified
   public void checkClassesExisted() {
     if (!classMap.isEmpty()) {
-      System.err.println("Error: class still exists");
-      System.err.println(classMap.toString());
+      DebugErr("Error: unrecognized type used");
+      //DebugErr(classMap.toString());
       System.exit(-1);
       // Print real error message that specifies line number and column number
     }
-    else
-      System.out.println("Debug in ClassRefChecker: list is empty, good job.");
+    //else
+    //  System.out.println("Debug in ClassRefChecker: list is empty, good job.");
+  }
+
+  private void DebugErr(String s) {
+    //System.err.println(s);
+    System.err.println("Type error");
   }
 }

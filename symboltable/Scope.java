@@ -45,12 +45,12 @@ public class Scope{
       break;
 
       default:
-        System.out.println("Error: case " + data.type + " not implemented yet.");
-        System.out.println("\nADD CASE TO Scope.Java PLEASE!\n");
+        //System.out.println("Error: case " + data.type + " not implemented yet.");
+        //System.out.println("\nADD CASE TO Scope.Java PLEASE!\n");
     }
 
     if (scope.containsKey(symbol)){
-      System.err.println("error: \"" + n + "\" not distinct");
+      DebugErr("error: \"" + n + "\" not distinct");
       System.exit(-1);
     }
     else
@@ -67,7 +67,7 @@ public class Scope{
       case ST_CLASS_EXTENDS:
         return scopeClasses.get(new Symbol(n));
       default:
-        System.out.println("Error: Did not specify SymbolType");
+        //System.out.println("Error: Did not specify SymbolType");
         return null;
     }
   }
@@ -76,20 +76,20 @@ public class Scope{
   // Should ONLY be used on global scope. This function fails otherwise.
   protected void addMethodToClass(NodeToken classToken, MethodData methodData) {
     if (!scopeClasses.containsKey(new Symbol(classToken))) {
-      System.err.println("error: attempted to add method in non-global scope\n");
+      DebugErr("error: attempted to add method in non-global scope\n");
       System.exit(-1);
     }
 
     ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
     classData.addMethod(methodData);
-    System.out.println(classToken + "," + classData.getType() + " adds " + methodData.getDeepType());
+    //System.out.println(classToken + "," + classData.getType() + " adds " + methodData.getDeepType());
   }
 
   // Used by SymbolTable for retrieving methods
   // Should ONLY be used on global scope. This function fails otherwise.
   protected MethodData getMethodFromClass(NodeToken classToken, NodeToken methodToken) {
     if (!scopeClasses.containsKey(new Symbol(classToken))) {
-      System.err.println("error: attempted to retrieve method in non-global scope\n");
+      DebugErr("error: attempted to retrieve method in non-global scope\n");
       System.exit(-1);
     }
 
@@ -108,13 +108,13 @@ public class Scope{
 
   public void addFieldVarToClass(NodeToken classToken, NodeToken n, SymbolData data) {
     if (!scopeClasses.containsKey(new Symbol(classToken))) {
-      System.err.println("error: attempted to add method in non-global scope\n");
+      DebugErr("error: attempted to add method in non-global scope\n");
       System.exit(-1);
     }
 
     ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
     classData.addFieldVar(n, data);
-    System.out.println(classToken + "," + classData.getType() + " adds " + n + ", " + data.getFormalType());
+    //System.out.println(classToken + "," + classData.getType() + " adds " + n + ", " + data.getFormalType());
   }
 
   // Debugging code
@@ -128,5 +128,10 @@ public class Scope{
     System.out.println("Variables:");
     for (Symbol s : scopeVariables.keySet())
       System.out.println(s);
+  }
+
+  private void DebugErr(String s) {
+    //System.err.println(s);
+    System.err.println("Type error");
   }
 }

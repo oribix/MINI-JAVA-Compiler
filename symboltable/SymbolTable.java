@@ -28,8 +28,8 @@ public class SymbolTable{
   public Scope getCurrentScope(){
     Scope currScope = scopeStack.peek();
 
-    if(currScope == null)
-      System.out.println("error: scope is null!");
+    //if(currScope == null)
+    //  System.out.println("error: scope is null!");
 
     return currScope;
   }
@@ -37,8 +37,8 @@ public class SymbolTable{
   public Scope getGlobalScope() {
     Scope globalScope = scopeStack.getLast();
 
-    if(globalScope == null)
-      System.out.println("error: scope is null!");
+    //if(globalScope == null)
+    //  System.out.println("error: scope is null!");
 
     return globalScope;
   }

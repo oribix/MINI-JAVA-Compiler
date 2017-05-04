@@ -9,7 +9,7 @@ class Typecheck{
     try {
       Node root = parser.Goal();
       root.accept(new DMVisitor());
-      System.err.println("Java program parsed successfully.");
+      System.out.println("Program type checked successfully");
     }
     catch (ParseException e) {
       System.err.println("Encountered errors during parse.");
