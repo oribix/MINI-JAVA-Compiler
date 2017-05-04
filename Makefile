@@ -1,4 +1,4 @@
-all: clean Typecheck.class
+all: clean Typecheck.class J2V.class
 
 run:
 	./Phase1Tester/run ./Phase1Tester/SelfTestCases/ ./hw1.tgz
@@ -13,6 +13,9 @@ tar: clean
 
 test: clean Typecheck.class
 	java Typecheck < Phase1Tests/Basic.java
+
+J2V.class: J2V.java
+	javac J2V.java
 
 Typecheck.class: Typecheck.java
 	javac Typecheck.java
