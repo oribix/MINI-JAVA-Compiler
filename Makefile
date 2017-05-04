@@ -12,7 +12,7 @@ tar: clean
 	tar -czf hw1.tgz hw1/
 
 test: clean Typecheck.class
-	java Typecheck < tests/Basic.java
+	java Typecheck < Phase1Tests/Basic.java
 
 Typecheck.class: Typecheck.java
 	javac Typecheck.java
