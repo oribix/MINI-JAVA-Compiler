@@ -21,3 +21,4 @@ clean:
 	rm -f *.class
 	rm -f */*.class
 	rm -rf hw1*
+	rm -rf Phase1Tester/Output
