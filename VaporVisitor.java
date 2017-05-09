@@ -10,7 +10,7 @@ public class VaporVisitor extends DepthFirstVisitor {
   SymbolTable symbolTable;
   SymbolType inheritedType;             // Basic type of object
   SymbolData deepInheritedType;         // "Deep" type refers to those with derived SymbolData objects
-  Vector<SymbolData> synthFormalParam;  // Used by MethodDeclaration (synthesized from FormalParam)
+  Vector<String> synthFormalParamNames; // String names of formal params
   Vector<SymbolData> synthExprList;     // Used by MessageSend (synthesized from ExprList)
   Vector<MethodData> synthUnverifiedMethods;  // Used by Statement and ClassDecl (synthesize from MessageSend)
   boolean synthCalledMethod;            // Used in Statements and methodDec to backpatch method return types
@@ -21,7 +21,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     symbolTable = new SymbolTable();
     inheritedType = SymbolType.ST_NULL;
     deepInheritedType = null;
-    synthFormalParam = new Vector<>();
+    synthFormalParamNames = new Vector<>();
     synthExprList = new Vector<>();
     synthUnverifiedMethods = new Vector<>();
     currentClassName = null;
@@ -39,13 +39,6 @@ public class VaporVisitor extends DepthFirstVisitor {
   SymbolData getDeepInheritedType() {
     SymbolData data = deepInheritedType;
     deepInheritedType = null;
-    return data;
-  }
-
-  //returns the synthesized formal parameters
-  Vector<SymbolData> getSynthFormalParam() {
-    Vector<SymbolData> data = synthFormalParam;
-    synthFormalParam = new Vector<>();
     return data;
   }
 
@@ -495,16 +488,15 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
 
     // Push variables into method's scope
-    // Push variable types for methodData information
     SymbolType st = getInheritedType();
     SymbolData sd = getDeepInheritedType();
-    if(st != SymbolType.ST_CLASS_VAR) {
+    if(st != SymbolType.ST_CLASS_VAR)
       symbolTable.addSymbol(n.f1.f0, st); 
-      synthFormalParam.add(new SymbolData(st));
-    } else {
+    else
       symbolTable.addSymbol(n.f1.f0, sd);
-      synthFormalParam.add(sd);
-    }
+
+    // Get identifier names for vapor code
+    synthFormalParamNames.add(n.f1.f0.toString());
   }
 
   ///**
