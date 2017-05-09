@@ -1,20 +1,20 @@
 package symboltable;
 import java.util.Vector;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import syntaxtree.NodeToken;
 
 public class ClassData extends SymbolData {
   NodeToken className;
   Vector<MethodData> methods;
-  HashMap<String, SymbolData> fields;
+  LinkedHashMap<String, SymbolData> fields;
   NodeToken parent;
 
   public ClassData(NodeToken className) {
     super(SymbolType.ST_CLASS);
     this.className = className;
     methods = new Vector<>();
-    fields = new HashMap<>();
+    fields = new LinkedHashMap<>();
     parent = null;
   }
 
@@ -22,7 +22,7 @@ public class ClassData extends SymbolData {
     super(SymbolType.ST_CLASS);
     this.className = className;
     methods = new Vector<>();
-    fields = new HashMap<>();
+    fields = new LinkedHashMap<>();
     parent = parentName;
   }
 
@@ -48,6 +48,10 @@ public class ClassData extends SymbolData {
 
   public NodeToken getParent() {
     return parent;
+  }
+
+  public Vector<MethodData> getMethods() {
+    return methods;
   }
 
   public boolean equals(Object o) {

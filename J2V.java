@@ -8,7 +8,7 @@ public class J2V {
 
     try {
       Node root = parser.Goal();
-      root.accept(new DMVisitor());
+      root.accept(new VaporVisitor());
       System.out.println("Vapor code generated successfully.");
     }
     catch (ParseException e) {

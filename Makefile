@@ -1,4 +1,4 @@
-all: clean Typecheck.class J2V.class
+all: clean J2V.class
 
 run:
 	./Phase1Tester/run ./Phase1Tester/SelfTestCases/ ./hw1.tgz

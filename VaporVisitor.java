@@ -16,7 +16,7 @@ public class VaporVisitor extends DepthFirstVisitor {
   NodeToken currentClassName;
 
   //Class Constructor
-  public DMVisitor(){
+  public VaporVisitor(){
     symbolTable = new SymbolTable();
     inheritedType = SymbolType.ST_NULL;
     deepInheritedType = null;
