@@ -6,7 +6,7 @@ import java.util.*;
 
 public class VaporVisitor extends DepthFirstVisitor {
   boolean debug_g = false;
-
+  VaporPrinter vaporPrinter;
   SymbolTable symbolTable;
   SymbolType inheritedType;             // Basic type of object
   SymbolData deepInheritedType;         // "Deep" type refers to those with derived SymbolData objects
@@ -25,6 +25,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     synthExprList = new Vector<>();
     synthUnverifiedMethods = new Vector<>();
     currentClassName = null;
+    vaporPrinter = new VaporPrinter(symbolTable);
   }
 
   //gets the inherited type then resets it
@@ -313,6 +314,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     currentClassName = n.f1.f0;
 
     //enter new scope for class
+    vaporPrinter.print("func Main()");
     n.f2.accept(this);
     symbolTable.newScope();
 
@@ -343,6 +345,7 @@ public class VaporVisitor extends DepthFirstVisitor {
 
     //exit class scope
     n.f17.accept(this);
+    vaporPrinter.print("ret");
     symbolTable.exitScope();
     currentClassName = null;
   }
@@ -454,6 +457,8 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
+    String s = "func " + currentClassName + "." + n.f2.f0 + "(ADD PARAMETERS)"; 
+    vaporPrinter.print(0, s);
     symbolTable.newScope(); // declared variables scope
     n.f5.accept(this);
     n.f6.accept(this);
@@ -463,6 +468,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f10.accept(this);
     n.f11.accept(this);
     n.f12.accept(this);
+    s = "ret " + "Expression name (FIX ME)";
+    vaporPrinter.print(1, s);
+    
     symbolTable.exitScope();  // varDec
     symbolTable.exitScope();  // formalParam
   }

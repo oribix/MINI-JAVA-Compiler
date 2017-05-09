@@ -119,6 +119,9 @@ public class SymbolTable{
 
     //getGlobalScope().PrintAll();
   }
+  public int Size(){
+	return scopeStack.size();
+  }
 
 
 }
