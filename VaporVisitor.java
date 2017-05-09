@@ -41,6 +41,11 @@ public class VaporVisitor extends DepthFirstVisitor {
     deepInheritedType = null;
     return data;
   }
+  Vector<String> getSynthFormalParamNames(){
+	Vector<String> data = synthFormalParamNames;
+    synthFormalParamNames = new Vector<>();
+    return data;
+  }
 
   //returns the synthesized Expression list
   Vector<SymbolData> getSynthExprList() {
@@ -450,7 +455,14 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
-    String s = "func " + currentClassName + "." + n.f2.f0 + "(ADD PARAMETERS)"; 
+    Vector<String> fpn = getSynthFormalParamNames();
+    String s = "func " + currentClassName + "." + n.f2.f0 + "(this";
+    for(int i = 0; i < fpn.size(); i++)
+    {
+		s = s + " " + fpn.get(i);
+	}
+	s = s + ')';
+	
     vaporPrinter.print(0, s);
     symbolTable.newScope(); // declared variables scope
     n.f5.accept(this);
