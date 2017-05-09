@@ -8,12 +8,20 @@ import syntaxtree.*;
 // Class that just vists methods to declare them
 class MethodDeclareVisitor extends DMVisitor {
   SymbolTable symbolTable;      // Passed from DMVisitor
+  Vector<SymbolData> synthFormalParam;  // Used by MethodDeclaration (synthesized from FormalParam)
   public Vector<NodeToken> unverifiedClasses; // Pass this back to DMVisitor
 
   public MethodDeclareVisitor(SymbolTable st) {
     symbolTable = st;
     synthFormalParam = new Vector<>();
     unverifiedClasses = new Vector<>();
+  }
+
+  //returns the synthesized formal parameters
+  public Vector<SymbolData> getSynthFormalParam() {
+    Vector<SymbolData> data = synthFormalParam;
+    synthFormalParam = new Vector<>();
+    return data;
   }
 
   /**
