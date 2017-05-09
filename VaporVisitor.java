@@ -1,6 +1,7 @@
 import visitor.*;
 import syntaxtree.*;
 import symboltable.*;
+import vaportools.*;
 import java.util.*;
 
 public class VaporVisitor extends DepthFirstVisitor {
@@ -257,21 +258,27 @@ public class VaporVisitor extends DepthFirstVisitor {
       TypeDeclaration td = (TypeDeclaration)typeDeclaration;
       Node choice = td.f0.choice;
       int which = td.f0.which;
+      ClassData data = null;
 
       if(which == 0){//ClassDeclaration
         ClassDeclaration cd = (ClassDeclaration)choice;
-        // Note: do we need to add main class's main method above? Probably not.
-        symbolTable.addSymbol(cd.f1.f0, new ClassData(cd.f1.f0)); // Add class
-        checkAndAddClassMethods(cd.f1.f0, cd.f4);                 // Add methods
-        checkAndAddFields(cd.f1.f0, cd.f3);
+        data = new ClassData(cd.f1.f0);
+
+        symbolTable.addSymbol(cd.f1.f0, data);    // Add class
+        checkAndAddClassMethods(cd.f1.f0, cd.f4); // Add methods
+        checkAndAddFields(cd.f1.f0, cd.f3);       // Add fields
+
       }
       else{//ClassExtendsDeclaration
         ClassExtendsDeclaration ced = (ClassExtendsDeclaration)choice;
+        data = new ClassData(ced.f1.f0, ced.f3.f0);
 
-        symbolTable.addSymbol(ced.f1.f0, new ClassData(ced.f1.f0, ced.f3.f0));
-        checkAndAddClassMethods(ced.f1.f0, ced.f6);                 // Add methods
-        checkAndAddFields(ced.f1.f0, ced.f5);
+        symbolTable.addSymbol(ced.f1.f0, data);     // Add class
+        checkAndAddClassMethods(ced.f1.f0, ced.f6); // Add methods
+        checkAndAddFields(ced.f1.f0, ced.f5);       // Add fields
       }
+
+      VaporPrinter.createVMT(data); // Print Vapor Code
     }
 
     n.f0.accept(this);

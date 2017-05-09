@@ -50,10 +50,6 @@ public class ClassData extends SymbolData {
     return parent;
   }
 
-  public Vector<MethodData> getMethods() {
-    return methods;
-  }
-
   public boolean equals(Object o) {
     return o instanceof ClassData 
         && methods.equals(((ClassData) o).methods);

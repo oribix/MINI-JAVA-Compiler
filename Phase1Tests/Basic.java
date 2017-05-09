@@ -12,6 +12,7 @@ class A {
   B b;
   C c;
   int horn;
+
 	public int run() {
 		int x;
 		boolean y;
@@ -19,7 +20,9 @@ class A {
 		x = 1;
 		return this.debugger();
 	}
+
 	public boolean debugger() {return b;}
+
 	//public int jump(int a, B b) {
 	//  return c;
 	//}

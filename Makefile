@@ -11,8 +11,8 @@ tar: clean
 	cp symboltable/* hw1/symboltable/
 	tar -czf hw1.tgz hw1/
 
-test: clean Typecheck.class
-	java Typecheck < Phase1Tests/Basic.java
+test: clean J2V.class
+	java J2V < Phase1Tests/Basic.java
 
 J2V.class: J2V.java
 	javac J2V.java
