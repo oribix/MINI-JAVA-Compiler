@@ -269,8 +269,6 @@ public class VaporVisitor extends DepthFirstVisitor {
   void resetTempVar() {
     tempIndex = 0;
   }
-  
-  String expressionHelper;
 
   //----------------------------
   //End Vapor specific functions
@@ -496,22 +494,24 @@ public class VaporVisitor extends DepthFirstVisitor {
 		s = s + " " + fpn.get(i);
 	}
 	s = s + ')';
-	
+
     vaporPrinter.print(0, s);
     symbolTable.newScope(); // declared variables scope
     n.f5.accept(this);
     n.f6.accept(this);
     n.f7.accept(this);
     n.f8.accept(this);
+
+    //return statement
     n.f9.accept(this);
     n.f10.accept(this);
+    s = "ret " + synthTempVar;
+    vaporPrinter.print(1, s);
+
     n.f11.accept(this);
     n.f12.accept(this);
-    
-    s = "ret " + expressionHelper;
-    vaporPrinter.print(1, s);
-    expressionHelper = "";
-    
+
+
     symbolTable.exitScope();  // varDec
     symbolTable.exitScope();  // formalParam
   }
@@ -934,7 +934,6 @@ public class VaporVisitor extends DepthFirstVisitor {
     // To check if variable exists (identifiers). If so, grab its type.
     if (n.f0.which == 3) {
       NodeToken varName = ((Identifier) n.f0.choice).f0;
-      expressionHelper += varName.tokenImage;
       SymbolData data = symbolTable.getSymbolData(varName, SymbolType.ST_VARIABLE, currentClassName);
 
       inheritedType = data.getType();
@@ -959,6 +958,7 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(TrueLiteral n) {
     n.f0.accept(this);
+    synthTempVar = "1";
     //<TrueLiteral> = ST_BOOLEAN
     inheritedType = SymbolType.ST_BOOLEAN;
   }
@@ -968,23 +968,25 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(FalseLiteral n) {
     n.f0.accept(this);
+    synthTempVar = "0";
     //<FalseLiteral> = ST_BOOLEAN
     inheritedType = SymbolType.ST_BOOLEAN;
   }
 
-  ///**
-  // * f0 -> <IDENTIFIER>
-  // */
-  //public void visit(Identifier n) {
-  //  n.f0.accept(this);
-  //}
+  /**
+   * f0 -> <IDENTIFIER>
+   */
+  public void visit(Identifier n) {
+    n.f0.accept(this);
+    synthTempVar = n.f0.toString();
+  }
 
   /**
    * f0 -> "this"
    */
   public void visit(ThisExpression n) {
     n.f0.accept(this);
-    expressionHelper += "this ";
+    synthTempVar = "this";
     inheritedType = SymbolType.ST_CLASS_VAR;
     deepInheritedType = new ClassVarData(currentClassName);
   }
