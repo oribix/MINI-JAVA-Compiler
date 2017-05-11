@@ -9,7 +9,7 @@ public class VaporVisitor extends DepthFirstVisitor {
 
   // Phase2 code
   VaporPrinter vaporPrinter;
-  Stack<String> attributeStack;
+  String synthTempVar;
   int tempIndex;
 
   // Phase1 code
@@ -32,7 +32,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     synthUnverifiedMethods = new Vector<>();
     currentClassName = null;
     vaporPrinter = new VaporPrinter(symbolTable);
-    attributeStack = new Stack<>();
+    synthTempVar = "";
 
     tempIndex = 0;
   }
@@ -754,16 +754,18 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(PlusExpression n) {
     n.f0.accept(this);
+    String arg1 = synthTempVar;
     n.f1.accept(this);
     n.f2.accept(this);
+    String arg2 = synthTempVar;
+
     //<PlusExpression> = ST_INT
     inheritedType = SymbolType.ST_INT;
 
-    String arg2 = attributeStack.pop(), // Must be reverse order for stack
-        arg1 = attributeStack.pop();
     String temp = newTempVar();
     vaporPrinter.print(temp + " = Add(" + arg1 + " " + arg2 + ")");
-    attributeStack.push(temp);
+
+    synthTempVar = temp;
   }
 
   /**
@@ -773,10 +775,19 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(MinusExpression n) {
     n.f0.accept(this);
+    String arg1 = synthTempVar;
     n.f1.accept(this);
     n.f2.accept(this);
+    String arg2 = synthTempVar;
+
+    String temp = newTempVar();
+
     //<MinusExpression> = ST_INT
     inheritedType = SymbolType.ST_INT;
+
+    vaporPrinter.print(temp + " = Sub(" + arg1 + " " + arg2 + ")");
+
+    synthTempVar = temp;
   }
 
   /**
@@ -930,10 +941,10 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(IntegerLiteral n) {
     n.f0.accept(this);
+    synthTempVar = n.f0.toString();
+
     //<IntegerLiteral> = ST_INT
     inheritedType = SymbolType.ST_INT;
-
-    attributeStack.push(n.f0.toString());
   }
 
   /**
