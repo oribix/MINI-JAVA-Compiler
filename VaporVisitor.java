@@ -751,7 +751,6 @@ public class VaporVisitor extends DepthFirstVisitor {
    * f2 -> PrimaryExpression()
    */
   public void visit(PlusExpression n) {
-	expressionHelper += "Add(";
     n.f0.accept(this);
     n.f1.accept(this);
     n.f2.accept(this);
@@ -765,7 +764,7 @@ public class VaporVisitor extends DepthFirstVisitor {
    * f2 -> PrimaryExpression()
    */
   public void visit(MinusExpression n) {
-	expressionHelper += "Sub(";
+
     n.f0.accept(this);
     n.f1.accept(this);
     n.f2.accept(this);
@@ -779,7 +778,7 @@ public class VaporVisitor extends DepthFirstVisitor {
    * f2 -> PrimaryExpression()
    */
   public void visit(TimesExpression n) {
-	expressionHelper += "MulS(";
+
     n.f0.accept(this);
     n.f1.accept(this);
     n.f2.accept(this);
