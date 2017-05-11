@@ -15,6 +15,7 @@ public class VaporVisitor extends DepthFirstVisitor {
   Vector<MethodData> synthUnverifiedMethods;  // Used by Statement and ClassDecl (synthesize from MessageSend)
   boolean synthCalledMethod;            // Used in Statements and methodDec to backpatch method return types
   NodeToken currentClassName;
+  int tempIndex;
 
   //Class Constructor
   public VaporVisitor(){
@@ -26,7 +27,13 @@ public class VaporVisitor extends DepthFirstVisitor {
     synthUnverifiedMethods = new Vector<>();
     currentClassName = null;
     vaporPrinter = new VaporPrinter(symbolTable);
+
+    tempIndex = 0;
   }
+
+  //-----------------------------
+  // Getters/Resetters of globals
+  //-----------------------------
 
   //gets the inherited type then resets it
   SymbolType getInheritedType(){
@@ -59,6 +66,14 @@ public class VaporVisitor extends DepthFirstVisitor {
     Vector<MethodData> data = synthUnverifiedMethods;
     synthUnverifiedMethods = new Vector<>();
     return data;
+  }
+
+  boolean getSynthCalledMethod() {
+    if (synthCalledMethod) {
+      synthCalledMethod = false;
+      return true;
+    }
+    return false;
   }
 
   //--------------------------
@@ -144,15 +159,8 @@ public class VaporVisitor extends DepthFirstVisitor {
 
   //--------------------------
   //End suggested helper functions
+  //Start typechecking overview functions
   //--------------------------
-
-  boolean getSynthCalledMethod() {
-    if (synthCalledMethod) {
-      synthCalledMethod = false;
-      return true;
-    }
-    return false;
-  }
 
   void printErrorMethod(String prepend, NodeToken methodToken, Vector<SymbolData> exprList) {
     int listSize = exprList.size();
@@ -242,6 +250,24 @@ public class VaporVisitor extends DepthFirstVisitor {
 
     return new VarPair(vd.f1.f0, deepType);
   }
+
+  //-----------------------------------
+  //End typechecking overview functions
+  //Start Vapor specific functions
+  //-----------------------------------
+
+  String newTempVar() {
+    return "t." + tempIndex++;
+  }
+
+  void resetTempVar() {
+    tempIndex = 0;
+  }
+
+  //----------------------------
+  //End Vapor specific functions
+  //Start grammar rules
+  //----------------------------
 
   /**
    * f0 -> MainClass()
