@@ -6,7 +6,13 @@ import java.util.*;
 
 public class VaporVisitor extends DepthFirstVisitor {
   boolean debug_g = false;
+
+  // Phase2 code
   VaporPrinter vaporPrinter;
+  Stack<String> attributeStack;
+  int tempIndex;
+
+  // Phase1 code
   SymbolTable symbolTable;
   SymbolType inheritedType;             // Basic type of object
   SymbolData deepInheritedType;         // "Deep" type refers to those with derived SymbolData objects
@@ -15,7 +21,6 @@ public class VaporVisitor extends DepthFirstVisitor {
   Vector<MethodData> synthUnverifiedMethods;  // Used by Statement and ClassDecl (synthesize from MessageSend)
   boolean synthCalledMethod;            // Used in Statements and methodDec to backpatch method return types
   NodeToken currentClassName;
-  int tempIndex;
 
   //Class Constructor
   public VaporVisitor(){
@@ -27,6 +32,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     synthUnverifiedMethods = new Vector<>();
     currentClassName = null;
     vaporPrinter = new VaporPrinter(symbolTable);
+    attributeStack = new Stack<>();
 
     tempIndex = 0;
   }
@@ -752,6 +758,12 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f2.accept(this);
     //<PlusExpression> = ST_INT
     inheritedType = SymbolType.ST_INT;
+
+    String arg2 = attributeStack.pop(), // Must be reverse order for stack
+        arg1 = attributeStack.pop();
+    String temp = newTempVar();
+    vaporPrinter.print(temp + " = Add(" + arg1 + " " + arg2 + ")");
+    attributeStack.push(temp);
   }
 
   /**
@@ -920,6 +932,8 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     //<IntegerLiteral> = ST_INT
     inheritedType = SymbolType.ST_INT;
+
+    attributeStack.push(n.f0.toString());
   }
 
   /**

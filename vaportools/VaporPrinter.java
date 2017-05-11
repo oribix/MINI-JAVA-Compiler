@@ -24,7 +24,7 @@ public class VaporPrinter {
 		}
 	}
 	public void print(String s){
-		for(int i = 0; i < symbolTable.Size() - 1; i++){
+		for(int i = 0; i < symbolTable.Size() - 3; i++){
 			System.out.printf("  ");
 		}
 		System.out.printf(s);

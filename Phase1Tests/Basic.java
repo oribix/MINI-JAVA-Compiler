@@ -17,7 +17,7 @@ class A {
 		int x;
 		boolean y;
 		int[] z;
-		x = 1;
+		x = 2;
 		return this.debugger();
 	}
 
@@ -54,7 +54,7 @@ class D extends C{
     return horn;
   }
   public int jump(int a, B b) {
-    return a;
+    return 1 + 1;
   }
 }
 class taco {}
