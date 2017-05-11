@@ -269,6 +269,8 @@ public class VaporVisitor extends DepthFirstVisitor {
   void resetTempVar() {
     tempIndex = 0;
   }
+  
+  String expressionHelper;
 
   //----------------------------
   //End Vapor specific functions
@@ -505,8 +507,10 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f10.accept(this);
     n.f11.accept(this);
     n.f12.accept(this);
-    s = "ret " + "Expression name (FIX ME)";
+    
+    s = "ret " + expressionHelper;
     vaporPrinter.print(1, s);
+    expressionHelper = "";
     
     symbolTable.exitScope();  // varDec
     symbolTable.exitScope();  // formalParam
@@ -717,9 +721,9 @@ public class VaporVisitor extends DepthFirstVisitor {
   // *       | MessageSend()
   // *       | PrimaryExpression()
   // */
-  //public void visit(Expression n) {
-  //  n.f0.accept(this);
-  //}
+  public void visit(Expression n) {
+    n.f0.accept(this);
+  }
 
   /**
    * f0 -> PrimaryExpression()
@@ -774,6 +778,7 @@ public class VaporVisitor extends DepthFirstVisitor {
    * f2 -> PrimaryExpression()
    */
   public void visit(MinusExpression n) {
+
     n.f0.accept(this);
     String arg1 = synthTempVar;
     n.f1.accept(this);
@@ -796,6 +801,7 @@ public class VaporVisitor extends DepthFirstVisitor {
    * f2 -> PrimaryExpression()
    */
   public void visit(TimesExpression n) {
+
     n.f0.accept(this);
     n.f1.accept(this);
     n.f2.accept(this);
@@ -928,6 +934,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     // To check if variable exists (identifiers). If so, grab its type.
     if (n.f0.which == 3) {
       NodeToken varName = ((Identifier) n.f0.choice).f0;
+      expressionHelper += varName.tokenImage;
       SymbolData data = symbolTable.getSymbolData(varName, SymbolType.ST_VARIABLE, currentClassName);
 
       inheritedType = data.getType();
@@ -977,6 +984,7 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(ThisExpression n) {
     n.f0.accept(this);
+    expressionHelper += "this ";
     inheritedType = SymbolType.ST_CLASS_VAR;
     deepInheritedType = new ClassVarData(currentClassName);
   }
