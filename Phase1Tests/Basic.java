@@ -11,6 +11,7 @@ class A {
   A a;
   B b;
   C c;
+  D d;
   int horn;
 
 	public int run() {
@@ -18,25 +19,15 @@ class A {
 		boolean y;
 		int[] z;
 		x = 2;
-		return this.debugger();
+		return d.jump(x, 1);
+		//return this.jump(x);
 	}
 
 	public boolean debugger() {return b;}
 
-	//public int jump(int a, B b) {
-	//  return c;
-	//}
-	//public boolean debugger(int cat, boolean dog, int[] bird, A lizard) {
-  //  //A w;
-  //  //B wing;
-  //  //Main z;
-  //  //boolean b;
-  //  //y = w.fireball(true, 1, 2, w);
-  //  //y = w.jump(1, y);
-  //  //y = y.fly(1, y);
-  //  cat.run();
-  //  return true;
-  //}
+	public int jump(int a, int b) {
+	  return a;
+	}
 }
 
 class B extends A{
@@ -54,6 +45,7 @@ class D extends C{
     return horn;
   }
   public int jump(int a, B b) {
+    b = new B();
     return 1 + 1;
   }
 }

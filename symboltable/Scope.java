@@ -1,6 +1,7 @@
 package symboltable;
 import syntaxtree.*;
 import java.util.HashMap;
+import java.util.Vector;
 
 //Wrapper for Hashmap which implements a scope
 public class Scope{
@@ -106,6 +107,36 @@ public class Scope{
     return null;
   }
 
+  protected int getMethodIndexFromClass(NodeToken classToken, NodeToken methodToken) {
+    if (!scopeClasses.containsKey(new Symbol(classToken))) {
+      DebugErr("error: attempted to retrieve method in non-global scope\n");
+      System.exit(-1);
+    }
+
+    // Look for method in list of methods
+    ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+    String methodName = methodToken.toString();
+    Vector<MethodData> methods = classData.getMethods();
+    for (int i = 0; i < methods.size(); i++)
+      if (methods.get(i).getName().toString().equals(methodName))
+        return i + getMethodIndexHelper(classData.getParent()); // Index + size of parent method lists
+
+    // Parent class may have function
+    if (classData.getParent() != null)
+      return getMethodIndexFromClass(classData.getParent(), methodToken);
+
+    return -1;
+  }
+
+  // To get parent method list sizes
+  private int getMethodIndexHelper(NodeToken classToken) {
+    if (classToken == null)
+      return 0;
+
+    ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+    return classData.getMethods().size() + getMethodIndexHelper(classData.getParent());
+  }
+
   public void addFieldVarToClass(NodeToken classToken, NodeToken n, SymbolData data) {
     if (!scopeClasses.containsKey(new Symbol(classToken))) {
       DebugErr("error: attempted to add method in non-global scope\n");
@@ -115,6 +146,23 @@ public class Scope{
     ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
     classData.addFieldVar(n, data);
     //System.out.println(classToken + "," + classData.getType() + " adds " + n + ", " + data.getFormalType());
+  }
+
+  protected int getClassFieldSize(NodeToken classToken) {
+    if (!scopeClasses.containsKey(new Symbol(classToken))) {
+      DebugErr("error: attempted to retrieve class in non-global scope\n");
+      System.exit(-1);
+    }
+
+    ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+
+    // if parent exists
+    if (classData.getParent() != null) {
+      ClassData parentClassData = (ClassData) scopeClasses.get(new Symbol(classData.getParent()));
+      return classData.getFieldSize() + parentClassData.getFieldSize();
+    }
+
+    return classData.getFieldSize();
   }
 
   // Debugging code

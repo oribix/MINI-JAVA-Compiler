@@ -42,6 +42,10 @@ public class ClassData extends SymbolData {
     return fields.get(n.toString());
   }
 
+  public int getFieldSize() {
+    return fields.size();
+  }
+
   public NodeToken getClassName(){
     return className;
   }

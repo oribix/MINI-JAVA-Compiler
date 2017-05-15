@@ -110,8 +110,11 @@ public class SymbolTable{
   }
 
   public MethodData getMethodFromClass(NodeToken classToken, NodeToken methodToken) {
-    // Later: edit this function to look at extended class parents
     return getGlobalScope().getMethodFromClass(classToken, methodToken);
+  }
+
+  public int getMethodIndexFromClass(NodeToken classToken, NodeToken methodToken) {
+    return getGlobalScope().getMethodIndexFromClass(classToken, methodToken);
   }
 
   public void addFieldVarToClass(NodeToken classToken, NodeToken n, SymbolData data) {
@@ -120,8 +123,11 @@ public class SymbolTable{
     //getGlobalScope().PrintAll();
   }
   public int Size(){
-	return scopeStack.size();
+	  return scopeStack.size();
   }
 
+  public int getClassFieldSize(NodeToken classToken) {
+    return getGlobalScope().getClassFieldSize(classToken);
+  }
 
 }

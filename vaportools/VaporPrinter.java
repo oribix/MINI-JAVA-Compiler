@@ -11,18 +11,6 @@ public class VaporPrinter {
 	public VaporPrinter(SymbolTable st){
 		symbolTable = st;
 	}
-	static public void createVMT(ClassData cd) {
-		Vector<MethodData> methods = cd.getMethods();
-		if (!methods.isEmpty()) {
-			System.out.println("const vmt_" + cd.getClassName());
-
-			String prefix = "  :" + cd.getClassName() + ".";
-			for (MethodData md : methods)
-			System.out.println(prefix + md.getName());
-
-		  System.out.println();
-		}
-	}
 	public void print(String s){
 		for(int i = 0; i < symbolTable.Size() - 3; i++){
 			System.out.printf("  ");

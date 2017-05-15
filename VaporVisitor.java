@@ -10,14 +10,15 @@ public class VaporVisitor extends DepthFirstVisitor {
   // Phase2 code
   VaporPrinter vaporPrinter;
   String synthTempVar;
-  int tempIndex;
+  int tempVarIndex;
+  int nullLabelIndex;
 
   // Phase1 code
   SymbolTable symbolTable;
   SymbolType inheritedType;             // Basic type of object
   SymbolData deepInheritedType;         // "Deep" type refers to those with derived SymbolData objects
   Vector<String> synthFormalParamNames; // String names of formal params
-  Vector<SymbolData> synthExprList;     // Used by MessageSend (synthesized from ExprList)
+  Vector<String> synthExprListNames;     // Used by MessageSend (synthesized from ExprList)
   Vector<MethodData> synthUnverifiedMethods;  // Used by Statement and ClassDecl (synthesize from MessageSend)
   boolean synthCalledMethod;            // Used in Statements and methodDec to backpatch method return types
   NodeToken currentClassName;
@@ -28,13 +29,13 @@ public class VaporVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_NULL;
     deepInheritedType = null;
     synthFormalParamNames = new Vector<>();
-    synthExprList = new Vector<>();
+    synthExprListNames = new Vector<>();
     synthUnverifiedMethods = new Vector<>();
     currentClassName = null;
     vaporPrinter = new VaporPrinter(symbolTable);
     synthTempVar = "";
 
-    tempIndex = 0;
+    tempVarIndex = 0;
   }
 
   //-----------------------------
@@ -61,9 +62,9 @@ public class VaporVisitor extends DepthFirstVisitor {
   }
 
   //returns the synthesized Expression list
-  Vector<SymbolData> getSynthExprList() {
-    Vector<SymbolData> data = synthExprList;
-    synthExprList = new Vector<>();
+  Vector<String> getSynthExprListNames() {
+    Vector<String> data = synthExprListNames;
+    synthExprListNames = new Vector<>();
     return data;
   }
 
@@ -263,12 +264,75 @@ public class VaporVisitor extends DepthFirstVisitor {
   //-----------------------------------
 
   String newTempVar() {
-    return "t." + tempIndex++;
+    return "t." + tempVarIndex++;
   }
 
   void resetTempVar() {
-    tempIndex = 0;
+    tempVarIndex = 0;
   }
+
+  // null labels are especially used for new class variables
+  String newNullLabel() {
+    return "null" + nullLabelIndex++;
+  }
+
+  String printClassVar(ClassVarData cd) {
+    String thisVar = newTempVar();
+    String nullLabel = newNullLabel();
+    int fieldSize = symbolTable.getClassFieldSize(new NodeToken(cd.getDeepType()));
+
+    // size of (fields + pointer to v-table) * 4
+    vaporPrinter.print(thisVar + " = HeapAllocZ(" + (fieldSize * 4 + 4) + ")");
+    vaporPrinter.print("[" + thisVar + "] = :vmt_" + cd.getDeepType());
+    vaporPrinter.print("if " + thisVar + " goto :" + nullLabel);
+    vaporPrinter.print("Error(\"null pointer\")");
+    vaporPrinter.print(nullLabel + ":");
+    
+    return thisVar;
+  }
+
+	void createVMT(ClassData cd) {
+		vaporPrinter.print("const vmt_" + cd.getClassName());
+
+    if (!createVMTHelper(cd))
+      vaporPrinter.print("  -1");
+		System.out.println();
+		//Vector<MethodData> methods = cd.getMethods();
+		//if (!methods.isEmpty()) {
+		//	String prefix = "  :" + cd.getClassName() + ".";
+
+		//	for (MethodData md : methods)
+		//	  System.out.println(prefix + md.getName());
+		//  System.out.println();
+		//}
+	}
+
+  // function that outputs parents' methods w/o the first vmt line
+  // returns bool if function printed any methods
+	boolean createVMTHelper(ClassData cd) {
+	  if (cd == null)
+	    return false;
+
+    // Print parent methods first. Track if the parents printed methods
+    boolean parentsPrinted = false;
+    if (cd.getParent() != null) {
+      ClassData parentCD = (ClassData) symbolTable.getSymbolData(cd.getParent(), SymbolType.ST_CLASS);
+      parentsPrinted = createVMTHelper(parentCD);
+    }
+
+    // print methods
+		Vector<MethodData> methods = cd.getMethods();
+		if (!methods.isEmpty()) {
+			String prefix = "  :" + cd.getClassName() + ".";
+
+			for (MethodData md : methods)
+			  System.out.println(prefix + md.getName());
+
+		  return true;
+		}
+    
+    return parentsPrinted;
+	}
 
   //----------------------------
   //End Vapor specific functions
@@ -309,7 +373,7 @@ public class VaporVisitor extends DepthFirstVisitor {
         checkAndAddFields(ced.f1.f0, ced.f5);       // Add fields
       }
 
-      VaporPrinter.createVMT(data); // Print Vapor Code
+      createVMT(data); // Print Vapor Code for v-table (methods)
     }
 
     n.f0.accept(this);
@@ -355,7 +419,7 @@ public class VaporVisitor extends DepthFirstVisitor {
 
     //enter new scope for main
     n.f7.accept(this);
-    symbolTable.newScope();//scope: main
+    symbolTable.newScope();
 
     //add String[] id to symbol table
     n.f8.accept(this);
@@ -364,18 +428,21 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f11.accept(this);
     symbolTable.addSymbol(n.f11.f0, SymbolType.ST_STRING_ARR);
 
+    // new scope for variables inside main
+    symbolTable.newScope();
     n.f12.accept(this);
     n.f13.accept(this);
     n.f14.accept(this);
     n.f15.accept(this);
 
-    //exit main scope
+    // return, exit inside main and main scope
     n.f16.accept(this);
+    vaporPrinter.print("ret");
+    symbolTable.exitScope();
     symbolTable.exitScope();
 
     //exit class scope
     n.f17.accept(this);
-    vaporPrinter.print("ret");
     symbolTable.exitScope();
     currentClassName = null;
   }
@@ -491,9 +558,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     String s = "func " + currentClassName + "." + n.f2.f0 + "(this";
     for(int i = 0; i < fpn.size(); i++)
     {
-		s = s + " " + fpn.get(i);
-	}
-	s = s + ')';
+      s = s + " " + fpn.get(i);
+	  }
+	  s = s + ')';
 
     vaporPrinter.print(0, s);
     symbolTable.newScope(); // declared variables scope
@@ -511,9 +578,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f11.accept(this);
     n.f12.accept(this);
 
-
     symbolTable.exitScope();  // varDec
     symbolTable.exitScope();  // formalParam
+    resetTempVar();           // reset temp variables
   }
 
   ///**
@@ -778,7 +845,6 @@ public class VaporVisitor extends DepthFirstVisitor {
    * f2 -> PrimaryExpression()
    */
   public void visit(MinusExpression n) {
-
     n.f0.accept(this);
     String arg1 = synthTempVar;
     n.f1.accept(this);
@@ -856,6 +922,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     //Primary Expression
     n.f0.accept(this);
     SymbolData callerData = getDeepInheritedType();
+    String callerVar = synthTempVar;
     n.f1.accept(this);
 
     //methodname
@@ -864,18 +931,31 @@ public class VaporVisitor extends DepthFirstVisitor {
     //Expression List
     n.f3.accept(this);
     n.f4.accept(this);
-    Vector<SymbolData> givenArgs = getSynthExprList();
+    Vector<String> givenArgs = getSynthExprListNames();
     n.f5.accept(this);
 
-    // Get class type of caller from primary expression
+    // Set return type in inheritedType and deepInheritedType
     MethodData methodData = symbolTable
       .getMethodFromClass(new NodeToken(callerData.getDeepType()), n.f2.f0);
-
-    // Set return type in inheritedType and deepInheritedType
     SymbolData returnType = methodData.getReturnType();
+
     inheritedType = returnType.getType();
     if (returnType.getType() == SymbolType.ST_CLASS_VAR)
       deepInheritedType = returnType;
+
+    // Vapor code for function call
+    String temp0 = newTempVar(), 
+        temp1 = newTempVar();
+    int methodOffset = symbolTable.getMethodIndexFromClass(
+        new NodeToken(callerData.getDeepType()), n.f2.f0);
+    String callMethodLine = temp1 + " = call " + temp0 + "(" + callerVar;
+    for (String s : givenArgs)
+      callMethodLine += " " + s;
+    callMethodLine += ")";
+
+    vaporPrinter.print(temp0 + " = [" + callerVar + "]");
+    vaporPrinter.print(temp0 + " = [" + temp0 + " + " + (methodOffset * 4) + "]");
+    vaporPrinter.print(callMethodLine);
   }
 
   /**
@@ -886,15 +966,7 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(ExpressionList n) {
     n.f0.accept(this);
-
-    // record variable types for method type check
-    SymbolType st = getInheritedType();
-    SymbolData sd = getDeepInheritedType();
-    if(st != SymbolType.ST_CLASS_VAR)
-      synthExprList.add(new SymbolData(st));
-    else
-      synthExprList.add(sd);
-
+    synthExprListNames.add(synthTempVar); // Add arg name
     n.f1.accept(this);
   }
 
@@ -907,14 +979,7 @@ public class VaporVisitor extends DepthFirstVisitor {
   public void visit(ExpressionRest n) {
     n.f0.accept(this);
     n.f1.accept(this);
-
-    // record variable types for method type check
-    SymbolType st = getInheritedType();
-    SymbolData sd = getDeepInheritedType();
-    if(st != SymbolType.ST_CLASS_VAR)
-      synthExprList.add(new SymbolData(st));
-    else
-      synthExprList.add(sd);
+    synthExprListNames.add(synthTempVar); // Add arg name
   }
 
   /**
@@ -1020,7 +1085,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f2.accept(this);
     n.f3.accept(this);
     inheritedType = SymbolType.ST_CLASS_VAR;
-    deepInheritedType = new ClassVarData(n.f1.f0);
+    ClassVarData varData = new ClassVarData(n.f1.f0);
+    deepInheritedType = varData;
+    synthTempVar = printClassVar(varData);
   }
 
   /**
