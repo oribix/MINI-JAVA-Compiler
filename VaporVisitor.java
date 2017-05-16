@@ -799,10 +799,18 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(AndExpression n) {
     n.f0.accept(this);
+    String arg1 = synthTempVar;
     n.f1.accept(this);
     n.f2.accept(this);
+    String arg2 = synthTempVar;
+
     //<AndExpression> = ST_Boolean
     inheritedType = SymbolType.ST_BOOLEAN;
+
+    String temp = newTempVar();
+    vaporPrinter.print(temp + " = And(" + arg1 + " " + arg2 + ")");
+
+    synthTempVar = temp;
   }
 
   /**
@@ -812,10 +820,18 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(CompareExpression n) {
     n.f0.accept(this);
+    String arg1 = synthTempVar;
     n.f1.accept(this);
     n.f2.accept(this);
+    String arg2 = synthTempVar;
+
     //<CompareExpression> = ST_BOOLEAN
     inheritedType = SymbolType.ST_BOOLEAN;
+
+    String temp = newTempVar();
+    vaporPrinter.print(temp + " = Lt(" + arg1 + " " + arg2 + ")");
+
+    synthTempVar = temp;
   }
 
   /**
