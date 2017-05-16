@@ -920,7 +920,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     String temp = newTempVar();
     //<TimesExpression> = ST_INT
     inheritedType = SymbolType.ST_INT;
-    vaporPrinter.print(temp + " = Mul(" + arg1 + " " + arg2 + ")");
+    vaporPrinter.print(temp + " = MulS(" + arg1 + " " + arg2 + ")");
 
     synthTempVar = temp;
   }
