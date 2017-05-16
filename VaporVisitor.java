@@ -12,6 +12,7 @@ public class VaporVisitor extends DepthFirstVisitor {
   String synthTempVar;
   int tempVarIndex;
   int nullLabelIndex;
+  int labelnum;
 
   // Phase1 code
   SymbolTable symbolTable;
@@ -265,6 +266,10 @@ public class VaporVisitor extends DepthFirstVisitor {
 
   String newTempVar() {
     return "t." + tempVarIndex++;
+  }
+
+  String newLabel() {
+    return "label" + labelnum++;
   }
 
   void resetTempVar() {
@@ -829,7 +834,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_BOOLEAN;
 
     String temp = newTempVar();
-    vaporPrinter.print(temp + " = Lt(" + arg1 + " " + arg2 + ")");
+    vaporPrinter.print(temp + " = LtS(" + arg1 + " " + arg2 + ")");
 
     synthTempVar = temp;
   }
@@ -1084,9 +1089,17 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f2.accept(this);
     n.f3.accept(this);
+    String arg = synthTempVar;
     n.f4.accept(this);
+
+    String result = newTempVar();
+
+    //todo: keep track of array size for array.length!
+    vaporPrinter.print(result + " = HeapAllocZ(" + arg + ")");
+
     //<ArrayAllocationExpression> = ST_INT
     inheritedType = SymbolType.ST_INT_ARR;
+    synthTempVar = result;
   }
 
   /**
@@ -1113,10 +1126,18 @@ public class VaporVisitor extends DepthFirstVisitor {
   public void visit(NotExpression n) {
     n.f0.accept(this);
     n.f1.accept(this);
+    String arg1 = synthTempVar;
+
+    String result  = newTempVar();
+    vaporPrinter.print(result + " = eq(" + arg1 + " 0)");
+
     //<NotExpression> = ST_BOOLEAN
     inheritedType = SymbolType.ST_BOOLEAN;
+
+    synthTempVar = result;
   }
 
+  //doesnt need work...
   ///**
   // * f0 -> "("
   // * f1 -> Expression()
