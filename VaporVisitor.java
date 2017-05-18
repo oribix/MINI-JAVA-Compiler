@@ -283,7 +283,7 @@ public class VaporVisitor extends DepthFirstVisitor {
 
   // null labels are especially used for new class variables
   String newNullLabel() {
-    return "null" + nullLabelIndex++;
+    return "null" + ++nullLabelIndex;
   }
 
   String printClassVar(ClassVarData cd) {
@@ -457,6 +457,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.removeScope();
     symbolTable.exitScope();
     currentClassName = null;
+
+    //reset temporary variable counter
+    resetTempVar();
   }
 
   ///**
@@ -817,20 +820,23 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.print("while" + whileCount + "_end:");
   }
 
-  ///**
-  // * f0 -> "DebugOut"
-  // * f1 -> "("
-  // * f2 -> Expression()
-  // * f3 -> ")"
-  // * f4 -> ";"
-  // */
-  //public void visit(PrintStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //}
+  /**
+   * f0 -> "System.out.println"
+   * f1 -> "("
+   * f2 -> Expression()
+   * f3 -> ")"
+   * f4 -> ";"
+   */
+  public void visit(PrintStatement n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+    String arg = synthTempVar;
+    n.f3.accept(this);
+    n.f4.accept(this);
+
+    vaporPrinter.print("PrintIntS(" + arg + ")");
+  }
 
   ///**
   // * f0 -> AndExpression()
@@ -1052,8 +1058,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     callMethodLine += ")";
 
     vaporPrinter.print(temp0 + " = [" + callerVar + "]");
-    vaporPrinter.print(temp0 + " = [" + temp0 + " + " + (methodOffset * 4) + "]");
+    vaporPrinter.print(temp0 + " = [" + temp0 + "+" + (methodOffset * 4) + "]");
     vaporPrinter.print(callMethodLine);
+    synthTempVar = temp1;
   }
 
   /**
@@ -1094,14 +1101,22 @@ public class VaporVisitor extends DepthFirstVisitor {
   public void visit(PrimaryExpression n) {
     n.f0.accept(this);
 
-    // To check if variable exists (identifiers). If so, grab its type.
     if (n.f0.which == 3) {
+      // To check if variable exists (identifiers). If so, grab its type.
       NodeToken varName = ((Identifier) n.f0.choice).f0;
       SymbolData data = symbolTable.getSymbolData(varName, SymbolType.ST_VARIABLE, currentClassName);
 
       inheritedType = data.getType();
       if (data.getType() == SymbolType.ST_CLASS_VAR)
         deepInheritedType = data;
+
+      // For vapor: To check if variable was a field member of a class. If so, "load it" from "this"
+      int fieldVarIndex = symbolTable.getFieldVarIndex(varName, currentClassName);
+      if (fieldVarIndex != -1) {
+        // Need offset index of field member. Will code new function for this.
+        synthTempVar = newTempVar();
+        vaporPrinter.print(synthTempVar + " = [this + " + (fieldVarIndex * 4 + 4) + "]");
+      }
     }
   }
 

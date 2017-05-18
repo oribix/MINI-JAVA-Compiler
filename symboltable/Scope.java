@@ -165,6 +165,64 @@ public class Scope{
     return classData.getFieldSize();
   }
 
+  // All field var index functions are for VAPOR code generation
+  public int getFieldVarIndex(NodeToken varToken, NodeToken classToken) {
+    // Any arg is null
+    if (varToken == null || classToken == null)
+      return -1;
+
+    // function not called in global scope
+    if (!scopeClasses.containsKey(new Symbol(classToken))) {
+      DebugErr("error: attempted to retrieve class in non-global scope\n");
+      System.exit(-1);
+    }
+
+    // Look for field index of varToken
+    ClassData cd = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+    if (cd != null) {
+      int index = cd.getFieldVarIndex(varToken);
+
+      if (index != -1)
+        return index + getFieldVarIndexHelper(cd.getParent());
+
+      return getFieldVarIndex(varToken, cd.getParent());
+    }
+
+    return -1;
+  }
+
+  private int getFieldVarIndexHelper(NodeToken classToken) {
+    if (classToken == null)
+      return 0;
+
+    ClassData classData = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+    return classData.getFieldSize() + getFieldVarIndexHelper(classData.getParent());
+  }
+
+  protected SymbolData getFieldVar(NodeToken varToken, NodeToken classToken) {
+    if (varToken == null || classToken == null)
+      return null;
+
+    // function not called in global scope
+    if (!scopeClasses.containsKey(new Symbol(classToken))) {
+      DebugErr("error: attempted to retrieve class in non-global scope\n");
+      System.exit(-1);
+    }
+
+    ClassData cd = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+
+    if (cd != null) {
+      SymbolData fieldData = cd.getFieldVar(varToken);
+
+      if (fieldData != null)
+        return fieldData;
+
+      return getFieldVar(varToken, cd.getParent());
+    }
+
+    return null;
+  }
+
   // Debugging code
   public void PrintAll() {
     System.out.println("Classes:");
