@@ -12,6 +12,9 @@ public class VaporVisitor extends DepthFirstVisitor {
   String synthTempVar;
   int tempVarIndex;
   int nullLabelIndex;
+  int labelnum;
+  int ifElseCount;
+  int whileCount;
 
   // Phase1 code
   SymbolTable symbolTable;
@@ -36,6 +39,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     synthTempVar = "";
 
     tempVarIndex = 0;
+    
+    ifElseCount = 0;
+    whileCount = 0;
   }
 
   //-----------------------------
@@ -267,6 +273,10 @@ public class VaporVisitor extends DepthFirstVisitor {
     return "t." + tempVarIndex++;
   }
 
+  String newLabel() {
+    return "label" + labelnum++;
+  }
+
   void resetTempVar() {
     tempVarIndex = 0;
   }
@@ -409,6 +419,7 @@ public class VaporVisitor extends DepthFirstVisitor {
 
     //enter new scope for class
     vaporPrinter.print("func Main()");
+    vaporPrinter.addScope();
     n.f2.accept(this);
     symbolTable.newScope();
 
@@ -443,6 +454,7 @@ public class VaporVisitor extends DepthFirstVisitor {
 
     //exit class scope
     n.f17.accept(this);
+    vaporPrinter.removeScope();
     symbolTable.exitScope();
     currentClassName = null;
   }
@@ -554,7 +566,8 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
-    Vector<String> fpn = getSynthFormalParamNames();
+    Vector<String> fpn = getSynthFormalParamNames();	
+    //output looks like func Class.ClassFunc(this num1 num2 num3)
     String s = "func " + currentClassName + "." + n.f2.f0 + "(this";
     for(int i = 0; i < fpn.size(); i++)
     {
@@ -563,6 +576,7 @@ public class VaporVisitor extends DepthFirstVisitor {
 	  s = s + ')';
 
     vaporPrinter.print(0, s);
+    vaporPrinter.addScope();
     symbolTable.newScope(); // declared variables scope
     n.f5.accept(this);
     n.f6.accept(this);
@@ -574,6 +588,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f10.accept(this);
     s = "ret " + synthTempVar;
     vaporPrinter.print(1, s);
+    vaporPrinter.removeScope();
 
     n.f11.accept(this);
     n.f12.accept(this);
@@ -583,7 +598,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     resetTempVar();           // reset temp variables
   }
 
-  ///**
+  ///** Does not need to be changed
   // * f0 -> FormalParameter()
   // * f1 -> ( FormalParameterRest() )*
   // */
@@ -614,7 +629,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     synthFormalParamNames.add(n.f1.f0.toString());
   }
 
-  ///**
+  ///** Does not need to be changed
   // * f0 -> ","
   // * f1 -> FormalParameter()
   // */
@@ -696,20 +711,23 @@ public class VaporVisitor extends DepthFirstVisitor {
     symbolTable.exitScope();
   }
 
-  ///**
+  ///** Set the identifier equal to the tempVar that the expresion is stored in
   // * f0 -> Identifier()
   // * f1 -> "="
   // * f2 -> Expression()
   // * f3 -> ";"
   // */
-  //public void visit(AssignmentStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //}
+  public void visit(AssignmentStatement n) {
+    n.f0.accept(this);
+    String identifierName = synthTempVar;
+    n.f1.accept(this);
+    n.f2.accept(this);
+    vaporPrinter.print(identifierName + " = " + synthTempVar);
+    n.f3.accept(this);
+  }
 
-  ///**
+  ///** Formatted according to the example in "Hints"
+  ///** Stores the value of synthTempVar(f5) into the array index
   // * f0 -> Identifier()
   // * f1 -> "["
   // * f2 -> Expression()
@@ -718,17 +736,34 @@ public class VaporVisitor extends DepthFirstVisitor {
   // * f5 -> Expression()
   // * f6 -> ";"
   // */
-  //public void visit(ArrayAssignmentStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //  n.f5.accept(this);
-  //  n.f6.accept(this);
-  //}
+  public void visit(ArrayAssignmentStatement n) {
+    n.f0.accept(this);
+    String identifierName = synthTempVar;
+    n.f1.accept(this);
+    n.f2.accept(this);
+    String indexNum = synthTempVar;
+    // checking if the index is in range
+    // if not, output an error message
+    vaporPrinter.print("s = [" + identifierName + "]");
+    vaporPrinter.print("ok = LtS(" + indexNum + ", s)");
+    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print("l" + nullLabelIndex + ": ok = LtS(-1, " + indexNum + ")");
+    ++nullLabelIndex;
+    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print("l" + nullLabelIndex + ": o = MulS(" + indexNum + ", 4)");
+    ++nullLabelIndex;
+    vaporPrinter.print("d = Add(" + identifierName + ", o)");
+    n.f3.accept(this);
+    n.f4.accept(this);
+    n.f5.accept(this);
+    // store the expression in synthTempVar into the address in [d+4]
+    vaporPrinter.print("[d+4] = " + synthTempVar);
+    n.f6.accept(this);
+  }
 
-  ///**
+  ///** Generates an if else statement using labels and goto instructions
   // * f0 -> "if"
   // * f1 -> "("
   // * f2 -> Expression()
@@ -737,30 +772,48 @@ public class VaporVisitor extends DepthFirstVisitor {
   // * f5 -> "else"
   // * f6 -> Statement()
   // */
-  //public void visit(IfStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //  n.f5.accept(this);
-  //  n.f6.accept(this);
-  //}
+  public void visit(IfStatement n) {
+	++ifElseCount;
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+    vaporPrinter.print("if0 " + synthTempVar + " goto :if" + ifElseCount + "_else");
+    // remove scope before each label, add scope after each label
+    vaporPrinter.addScope();
+    n.f3.accept(this);
+    n.f4.accept(this);
+    vaporPrinter.print("goto :if" + ifElseCount + "_end");
+    n.f5.accept(this);
+    vaporPrinter.removeScope();
+    vaporPrinter.print("if" + ifElseCount + "_else:");
+    vaporPrinter.addScope();
+    n.f6.accept(this);
+    vaporPrinter.removeScope();
+    vaporPrinter.print("if" + ifElseCount + "_end:");
+  }
 
-  ///**
+  ///** Generates a while loop using labels and goto instructions
   // * f0 -> "while"
   // * f1 -> "("
   // * f2 -> Expression()
   // * f3 -> ")"
   // * f4 -> Statement()
   // */
-  //public void visit(WhileStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //}
+  public void visit(WhileStatement n) {
+	++whileCount;
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+    vaporPrinter.print("while" + whileCount + ":");
+    vaporPrinter.print("if0 " + synthTempVar + " goto :while" + whileCount + "_end");
+    // remove scope before each label, add scope after each label
+    vaporPrinter.addScope();
+    n.f3.accept(this);
+    n.f4.accept(this);
+    vaporPrinter.print("goto :while" + whileCount);
+    vaporPrinter.removeScope();
+    vaporPrinter.print("while" + whileCount + "_end:");
+  }
 
   ///**
   // * f0 -> "DebugOut"
@@ -829,7 +882,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     inheritedType = SymbolType.ST_BOOLEAN;
 
     String temp = newTempVar();
-    vaporPrinter.print(temp + " = Lt(" + arg1 + " " + arg2 + ")");
+    vaporPrinter.print(temp + " = LtS(" + arg1 + " " + arg2 + ")");
 
     synthTempVar = temp;
   }
@@ -885,13 +938,21 @@ public class VaporVisitor extends DepthFirstVisitor {
   public void visit(TimesExpression n) {
 
     n.f0.accept(this);
+    String arg1 = synthTempVar;
     n.f1.accept(this);
     n.f2.accept(this);
+    String arg2 = synthTempVar;
+
+    String temp = newTempVar();
     //<TimesExpression> = ST_INT
     inheritedType = SymbolType.ST_INT;
+    vaporPrinter.print(temp + " = MulS(" + arg1 + " " + arg2 + ")");
+
+    synthTempVar = temp;
   }
 
-  /**
+  /** Formatted according to the example in "Hints"
+  /** Stores the value of synthTempVar(f5) into the array index
    * f0 -> PrimaryExpression()
    * f1 -> "["
    * f2 -> PrimaryExpression()
@@ -899,8 +960,27 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(ArrayLookup n) {
     n.f0.accept(this);
+    String arrayName = synthTempVar;
     n.f1.accept(this);
     n.f2.accept(this);
+    String indexNum = synthTempVar;
+    // checking if the index is in range
+    // if not, output an error message
+    vaporPrinter.print("s = [" + arrayName + "]");
+    vaporPrinter.print("ok = LtS(" + indexNum + ", s)");
+    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print("l" + nullLabelIndex + ": ok = LtS(-1, " + indexNum + ")");
+    ++nullLabelIndex;
+    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print("l" + nullLabelIndex + ": o = MulS(" + indexNum + ", 4)");
+    ++nullLabelIndex;
+    vaporPrinter.print("d = Add(" + arrayName + ", o)");
+    String temp = newTempVar();
+    // store the value in [d+4] into a tempVar
+    vaporPrinter.print(temp + " = [d+4]");
+    synthTempVar = temp;
     n.f3.accept(this);
     //<ArrayLookup> = ST_INT
     inheritedType = SymbolType.ST_INT;
@@ -1092,9 +1172,17 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f2.accept(this);
     n.f3.accept(this);
+    String arg = synthTempVar;
     n.f4.accept(this);
+
+    String result = newTempVar();
+
+    //todo: keep track of array size for array.length!
+    vaporPrinter.print(result + " = HeapAllocZ(" + arg + ")");
+
     //<ArrayAllocationExpression> = ST_INT
     inheritedType = SymbolType.ST_INT_ARR;
+    synthTempVar = result;
   }
 
   /**
@@ -1121,10 +1209,18 @@ public class VaporVisitor extends DepthFirstVisitor {
   public void visit(NotExpression n) {
     n.f0.accept(this);
     n.f1.accept(this);
+    String arg1 = synthTempVar;
+
+    String result  = newTempVar();
+    vaporPrinter.print(result + " = eq(" + arg1 + " 0)");
+
     //<NotExpression> = ST_BOOLEAN
     inheritedType = SymbolType.ST_BOOLEAN;
+
+    synthTempVar = result;
   }
 
+  //doesnt need work...
   ///**
   // * f0 -> "("
   // * f1 -> Expression()

@@ -19,6 +19,16 @@ class A {
 		boolean y;
 		int[] z;
 		x = 2;
+    
+    if (x < 3) {
+      x = 2;
+    }
+    else {
+      x = 1;
+    }
+    while (true) {
+      x = 2;
+    }
 		return d.jump(x, 1);
 		//return this.jump(x);
 	}
