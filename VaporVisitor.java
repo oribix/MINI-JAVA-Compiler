@@ -794,20 +794,23 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.print("while" + whileCount + "_end:");
   }
 
-  ///**
-  // * f0 -> "DebugOut"
-  // * f1 -> "("
-  // * f2 -> Expression()
-  // * f3 -> ")"
-  // * f4 -> ";"
-  // */
-  //public void visit(PrintStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //}
+  /**
+   * f0 -> "System.out.println"
+   * f1 -> "("
+   * f2 -> Expression()
+   * f3 -> ")"
+   * f4 -> ";"
+   */
+  public void visit(PrintStatement n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+    String arg = synthTempVar;
+    n.f3.accept(this);
+    n.f4.accept(this);
+
+    vaporPrinter.print("PrintIntS(" + arg + ")");
+  }
 
   ///**
   // * f0 -> AndExpression()
