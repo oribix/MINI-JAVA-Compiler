@@ -283,7 +283,7 @@ public class VaporVisitor extends DepthFirstVisitor {
 
   // null labels are especially used for new class variables
   String newNullLabel() {
-    return "null" + nullLabelIndex++;
+    return "null" + ++nullLabelIndex;
   }
 
   String printClassVar(ClassVarData cd) {
@@ -457,6 +457,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.removeScope();
     symbolTable.exitScope();
     currentClassName = null;
+
+    //reset temporary variable counter
+    resetTempVar();
   }
 
   ///**
@@ -1012,8 +1015,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     callMethodLine += ")";
 
     vaporPrinter.print(temp0 + " = [" + callerVar + "]");
-    vaporPrinter.print(temp0 + " = [" + temp0 + " + " + (methodOffset * 4) + "]");
+    vaporPrinter.print(temp0 + " = [" + temp0 + "+" + (methodOffset * 4) + "]");
     vaporPrinter.print(callMethodLine);
+    synthTempVar = temp1;
   }
 
   /**
