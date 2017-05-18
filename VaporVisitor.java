@@ -566,7 +566,8 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f3.accept(this);
     n.f4.accept(this);
-    Vector<String> fpn = getSynthFormalParamNames();
+    Vector<String> fpn = getSynthFormalParamNames();	
+    //output looks like func Class.ClassFunc(this num1 num2 num3)
     String s = "func " + currentClassName + "." + n.f2.f0 + "(this";
     for(int i = 0; i < fpn.size(); i++)
     {
@@ -597,7 +598,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     resetTempVar();           // reset temp variables
   }
 
-  ///**
+  ///** Does not need to be changed
   // * f0 -> FormalParameter()
   // * f1 -> ( FormalParameterRest() )*
   // */
@@ -628,7 +629,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     synthFormalParamNames.add(n.f1.f0.toString());
   }
 
-  ///**
+  ///** Does not need to be changed
   // * f0 -> ","
   // * f1 -> FormalParameter()
   // */
@@ -710,7 +711,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     symbolTable.exitScope();
   }
 
-  ///**
+  ///** Set the identifier equal to the tempVar that the expresion is stored in
   // * f0 -> Identifier()
   // * f1 -> "="
   // * f2 -> Expression()
@@ -725,7 +726,8 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f3.accept(this);
   }
 
-  ///**
+  ///** Formatted according to the example in "Hints"
+  ///** Stores the value of synthTempVar(f5) into the array index
   // * f0 -> Identifier()
   // * f1 -> "["
   // * f2 -> Expression()
@@ -734,17 +736,34 @@ public class VaporVisitor extends DepthFirstVisitor {
   // * f5 -> Expression()
   // * f6 -> ";"
   // */
-  //public void visit(ArrayAssignmentStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //  n.f5.accept(this);
-  //  n.f6.accept(this);
-  //}
+  public void visit(ArrayAssignmentStatement n) {
+    n.f0.accept(this);
+    String identifierName = synthTempVar;
+    n.f1.accept(this);
+    n.f2.accept(this);
+    String indexNum = synthTempVar;
+    // checking if the index is in range
+    // if not, output an error message
+    vaporPrinter.print("s = [" + identifierName + "]");
+    vaporPrinter.print("ok = LtS(" + indexNum + ", s)");
+    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print("l" + nullLabelIndex + ": ok = LtS(-1, " + indexNum + ")");
+    ++nullLabelIndex;
+    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print("l" + nullLabelIndex + ": o = MulS(" + indexNum + ", 4)");
+    ++nullLabelIndex;
+    vaporPrinter.print("d = Add(" + identifierName + ", o)");
+    n.f3.accept(this);
+    n.f4.accept(this);
+    n.f5.accept(this);
+    // store the expression in synthTempVar into the address in [d+4]
+    vaporPrinter.print("[d+4] = " + synthTempVar);
+    n.f6.accept(this);
+  }
 
-  ///**
+  ///** Generates an if else statement using labels and goto instructions
   // * f0 -> "if"
   // * f1 -> "("
   // * f2 -> Expression()
@@ -759,6 +778,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f2.accept(this);
     vaporPrinter.print("if0 " + synthTempVar + " goto :if" + ifElseCount + "_else");
+    // remove scope before each label, add scope after each label
     vaporPrinter.addScope();
     n.f3.accept(this);
     n.f4.accept(this);
@@ -772,7 +792,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.print("if" + ifElseCount + "_end:");
   }
 
-  ///**
+  ///** Generates a while loop using labels and goto instructions
   // * f0 -> "while"
   // * f1 -> "("
   // * f2 -> Expression()
@@ -786,6 +806,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f2.accept(this);
     vaporPrinter.print("while" + whileCount + ":");
     vaporPrinter.print("if0 " + synthTempVar + " goto :while" + whileCount + "_end");
+    // remove scope before each label, add scope after each label
     vaporPrinter.addScope();
     n.f3.accept(this);
     n.f4.accept(this);
@@ -930,7 +951,8 @@ public class VaporVisitor extends DepthFirstVisitor {
     synthTempVar = temp;
   }
 
-  /**
+  /** Formatted according to the example in "Hints"
+  /** Stores the value of synthTempVar(f5) into the array index
    * f0 -> PrimaryExpression()
    * f1 -> "["
    * f2 -> PrimaryExpression()
@@ -938,8 +960,27 @@ public class VaporVisitor extends DepthFirstVisitor {
    */
   public void visit(ArrayLookup n) {
     n.f0.accept(this);
+    String arrayName = synthTempVar;
     n.f1.accept(this);
     n.f2.accept(this);
+    String indexNum = synthTempVar;
+    // checking if the index is in range
+    // if not, output an error message
+    vaporPrinter.print("s = [" + arrayName + "]");
+    vaporPrinter.print("ok = LtS(" + indexNum + ", s)");
+    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print("l" + nullLabelIndex + ": ok = LtS(-1, " + indexNum + ")");
+    ++nullLabelIndex;
+    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print("l" + nullLabelIndex + ": o = MulS(" + indexNum + ", 4)");
+    ++nullLabelIndex;
+    vaporPrinter.print("d = Add(" + arrayName + ", o)");
+    String temp = newTempVar();
+    // store the value in [d+4] into a tempVar
+    vaporPrinter.print(temp + " = [d+4]");
+    synthTempVar = temp;
     n.f3.accept(this);
     //<ArrayLookup> = ST_INT
     inheritedType = SymbolType.ST_INT;
