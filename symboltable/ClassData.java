@@ -42,6 +42,18 @@ public class ClassData extends SymbolData {
     return fields.get(n.toString());
   }
 
+  public int getFieldVarIndex(NodeToken n) {
+    String varName = n.toString();
+    int index = 0;
+    for (String s : fields.keySet()) {
+      if (varName.equals(s))
+        return index;
+      index++;
+    }
+
+    return -1;
+  }
+
   public int getFieldSize() {
     return fields.size();
   }

@@ -85,6 +85,30 @@ public class SymbolTable{
     return null;
   }
 
+  public int getFieldVarIndex(NodeToken varToken, NodeToken classToken){
+    if (scopeStack.size() < 4) {
+      System.err.println("error: called SymbolTable.isFieldVar outside of method");
+      System.exit(-1);
+    }
+
+    // Method, argument scopes (in that order)
+    Scope[] scopes = {scopeStack.pop(), scopeStack.pop()};
+
+    // Is in method or args scope.
+    boolean isLocalVar = scopes[0].getSymbolData(varToken, SymbolType.ST_VARIABLE) != null ||
+        scopes[1].getSymbolData(varToken, SymbolType.ST_VARIABLE) != null;
+
+    int fieldVarIndex = -1; 
+    if (!isLocalVar)
+      fieldVarIndex = getGlobalScope().getFieldVarIndex(varToken, classToken);
+
+    // put scopes back in stack
+    for (int i = scopes.length - 1; i >= 0; i--)
+      scopeStack.push(scopes[i]);
+
+    return fieldVarIndex;
+  }
+
   public void addSymbol(NodeToken n, SymbolType type){
     Scope scope = getCurrentScope();
     scope.addSymbol(n, type);

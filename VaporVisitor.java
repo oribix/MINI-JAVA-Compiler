@@ -1012,14 +1012,23 @@ public class VaporVisitor extends DepthFirstVisitor {
   public void visit(PrimaryExpression n) {
     n.f0.accept(this);
 
-    // To check if variable exists (identifiers). If so, grab its type.
     if (n.f0.which == 3) {
+      // To check if variable exists (identifiers). If so, grab its type.
       NodeToken varName = ((Identifier) n.f0.choice).f0;
       SymbolData data = symbolTable.getSymbolData(varName, SymbolType.ST_VARIABLE, currentClassName);
 
       inheritedType = data.getType();
       if (data.getType() == SymbolType.ST_CLASS_VAR)
         deepInheritedType = data;
+
+      // For vapor: To check if variable was a field member of a class. If so, "load it" from "this"
+      System.out.println(varName + ": " + symbolTable.getFieldVarIndex(varName, currentClassName));
+      //if (symbolTable.getFieldVar(varName, currentClassName)) {
+      //  System.out.println(varName + " is field var");
+      //  // Need offset index of field member. Will code new function for this.
+      //  //synthTempVar = newTempVar();
+      //  //vaporPrinter.print(synthTempVar + " = [this + " + 
+      //}
     }
   }
 

@@ -31,18 +31,24 @@ class A {
 }
 
 class B extends A{
+  boolean zimbabwe;
   public int africa(int cape) {
     return horn;
   }
 }
 class C extends B{
+  boolean zambia;
+  boolean westernSahara;
   public int africa(int cape) {
-    return horn;
+    return westernSahara;
   }
 }
 class D extends C{
+  boolean uganda;
+  boolean tunisia;
+  boolean togo;
   public int africa(int cape) {
-    return horn;
+    return uganda;
   }
   public int jump(int a, B b) {
     b = new B();
