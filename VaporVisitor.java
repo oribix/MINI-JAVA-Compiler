@@ -817,8 +817,8 @@ public class VaporVisitor extends DepthFirstVisitor {
 	++whileCount;
     n.f0.accept(this);
     n.f1.accept(this);
-    n.f2.accept(this);
     vaporPrinter.print("while" + whileCount + ":");
+    n.f2.accept(this);
     String whileLabel = "while" + whileCount + "_end";
     vaporPrinter.print("if0 " + synthTempVar + " goto :" + whileLabel);
     // remove scope before each label, add scope after each label
@@ -1200,6 +1200,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.print("bytes = MulS(" + expr + " 4)");
     vaporPrinter.print("bytes = Add(bytes 4)");
     vaporPrinter.print(result + " = HeapAllocZ(bytes)");
+    vaporPrinter.print("[" + result + "] = " + expr);
 
     //<ArrayAllocationExpression> = ST_INT
     inheritedType = SymbolType.ST_INT_ARR;
