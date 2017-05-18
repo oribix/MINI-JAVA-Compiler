@@ -1022,13 +1022,12 @@ public class VaporVisitor extends DepthFirstVisitor {
         deepInheritedType = data;
 
       // For vapor: To check if variable was a field member of a class. If so, "load it" from "this"
-      System.out.println(varName + ": " + symbolTable.getFieldVarIndex(varName, currentClassName));
-      //if (symbolTable.getFieldVar(varName, currentClassName)) {
-      //  System.out.println(varName + " is field var");
-      //  // Need offset index of field member. Will code new function for this.
-      //  //synthTempVar = newTempVar();
-      //  //vaporPrinter.print(synthTempVar + " = [this + " + 
-      //}
+      int fieldVarIndex = symbolTable.getFieldVarIndex(varName, currentClassName);
+      if (fieldVarIndex != -1) {
+        // Need offset index of field member. Will code new function for this.
+        synthTempVar = newTempVar();
+        vaporPrinter.print(synthTempVar + " = [this + " + (fieldVarIndex * 4 + 4) + "]");
+      }
     }
   }
 

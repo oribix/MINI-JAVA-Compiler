@@ -54,5 +54,8 @@ class D extends C{
     b = new B();
     return 1 + 1;
   }
+  public D test() {
+    return d;
+  }
 }
 class taco {}

@@ -199,6 +199,30 @@ public class Scope{
     return classData.getFieldSize() + getFieldVarIndexHelper(classData.getParent());
   }
 
+  protected SymbolData getFieldVar(NodeToken varToken, NodeToken classToken) {
+    if (varToken == null || classToken == null)
+      return null;
+
+    // function not called in global scope
+    if (!scopeClasses.containsKey(new Symbol(classToken))) {
+      DebugErr("error: attempted to retrieve class in non-global scope\n");
+      System.exit(-1);
+    }
+
+    ClassData cd = (ClassData) getSymbolData(classToken, SymbolType.ST_CLASS);
+
+    if (cd != null) {
+      SymbolData fieldData = cd.getFieldVar(varToken);
+
+      if (fieldData != null)
+        return fieldData;
+
+      return getFieldVar(varToken, cd.getParent());
+    }
+
+    return null;
+  }
+
   // Debugging code
   public void PrintAll() {
     System.out.println("Classes:");
