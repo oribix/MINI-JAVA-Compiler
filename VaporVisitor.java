@@ -283,7 +283,7 @@ public class VaporVisitor extends DepthFirstVisitor {
 
   // null labels are especially used for new class variables
   String newNullLabel() {
-    return "null" + nullLabelIndex++;
+    return "null" + ++nullLabelIndex;
   }
 
   String printClassVar(ClassVarData cd) {
@@ -457,6 +457,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.removeScope();
     symbolTable.exitScope();
     currentClassName = null;
+
+    //reset temporary variable counter
+    resetTempVar();
   }
 
   ///**
@@ -815,20 +818,23 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.print("while" + whileCount + "_end:");
   }
 
-  ///**
-  // * f0 -> "DebugOut"
-  // * f1 -> "("
-  // * f2 -> Expression()
-  // * f3 -> ")"
-  // * f4 -> ";"
-  // */
-  //public void visit(PrintStatement n) {
-  //  n.f0.accept(this);
-  //  n.f1.accept(this);
-  //  n.f2.accept(this);
-  //  n.f3.accept(this);
-  //  n.f4.accept(this);
-  //}
+  /**
+   * f0 -> "System.out.println"
+   * f1 -> "("
+   * f2 -> Expression()
+   * f3 -> ")"
+   * f4 -> ";"
+   */
+  public void visit(PrintStatement n) {
+    n.f0.accept(this);
+    n.f1.accept(this);
+    n.f2.accept(this);
+    String arg = synthTempVar;
+    n.f3.accept(this);
+    n.f4.accept(this);
+
+    vaporPrinter.print("PrintIntS(" + arg + ")");
+  }
 
   ///**
   // * f0 -> AndExpression()
@@ -1050,8 +1056,9 @@ public class VaporVisitor extends DepthFirstVisitor {
     callMethodLine += ")";
 
     vaporPrinter.print(temp0 + " = [" + callerVar + "]");
-    vaporPrinter.print(temp0 + " = [" + temp0 + " + " + (methodOffset * 4) + "]");
+    vaporPrinter.print(temp0 + " = [" + temp0 + "+" + (methodOffset * 4) + "]");
     vaporPrinter.print(callMethodLine);
+    synthTempVar = temp1;
   }
 
   /**

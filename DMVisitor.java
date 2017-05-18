@@ -802,7 +802,7 @@ public class DMVisitor extends DepthFirstVisitor {
   }
 
   /**
-   * f0 -> "DebugOut"
+   * f0 -> "System.out.println"
    * f1 -> "("
    * f2 -> Expression()
    * f3 -> ")"
