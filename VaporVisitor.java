@@ -12,6 +12,7 @@ public class VaporVisitor extends DepthFirstVisitor {
   String synthTempVar;
   int tempVarIndex;
   int nullLabelIndex;
+  int boundsLabelIndex;
   int labelnum;
   int ifElseCount;
   int whileCount;
@@ -39,6 +40,8 @@ public class VaporVisitor extends DepthFirstVisitor {
     synthTempVar = "";
 
     tempVarIndex = 0;
+    nullLabelIndex = 0;
+    boundsLabelIndex = 0;
     
     ifElseCount = 0;
     whileCount = 0;
@@ -284,6 +287,10 @@ public class VaporVisitor extends DepthFirstVisitor {
   // null labels are especially used for new class variables
   String newNullLabel() {
     return "null" + ++nullLabelIndex;
+  }
+
+  String newBoundsLabel() {
+    return "bounds" + ++boundsLabelIndex;
   }
 
   String printClassVar(ClassVarData cd) {
@@ -748,16 +755,18 @@ public class VaporVisitor extends DepthFirstVisitor {
     // checking if the index is in range
     // if not, output an error message
     vaporPrinter.print("s = [" + identifierName + "]");
-    vaporPrinter.print("ok = LtS(" + indexNum + ", s)");
-    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    vaporPrinter.print("ok = LtS(" + indexNum + " s)");
+    String boundsLabel = newBoundsLabel();
+    vaporPrinter.print("if ok goto :" + boundsLabel);
     vaporPrinter.print("Error(\"Array index out of bounds\")");
-    vaporPrinter.print("l" + nullLabelIndex + ": ok = LtS(-1, " + indexNum + ")");
+    //vaporPrinter.print("l" + nullLabelIndex + ": ok = LtS(-1 " + indexNum + ")");
+    //++nullLabelIndex;
+    //vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    //vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print(boundsLabel + ":");
+    vaporPrinter.print("o = MulS(" + indexNum + " 4)");
     ++nullLabelIndex;
-    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
-    vaporPrinter.print("Error(\"Array index out of bounds\")");
-    vaporPrinter.print("l" + nullLabelIndex + ": o = MulS(" + indexNum + ", 4)");
-    ++nullLabelIndex;
-    vaporPrinter.print("d = Add(" + identifierName + ", o)");
+    vaporPrinter.print("d = Add(" + identifierName + " o)");
     n.f3.accept(this);
     n.f4.accept(this);
     n.f5.accept(this);
@@ -808,14 +817,15 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f2.accept(this);
     vaporPrinter.print("while" + whileCount + ":");
-    vaporPrinter.print("if0 " + synthTempVar + " goto :while" + whileCount + "_end");
+    String whileLabel = "while" + whileCount + "_end";
+    vaporPrinter.print("if0 " + synthTempVar + " goto :" + whileLabel);
     // remove scope before each label, add scope after each label
     vaporPrinter.addScope();
     n.f3.accept(this);
     n.f4.accept(this);
     vaporPrinter.print("goto :while" + whileCount);
     vaporPrinter.removeScope();
-    vaporPrinter.print("while" + whileCount + "_end:");
+    vaporPrinter.print(whileLabel + ":");
   }
 
   /**
@@ -973,16 +983,16 @@ public class VaporVisitor extends DepthFirstVisitor {
     // checking if the index is in range
     // if not, output an error message
     vaporPrinter.print("s = [" + arrayName + "]");
-    vaporPrinter.print("ok = LtS(" + indexNum + ", s)");
-    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    vaporPrinter.print("ok = LtS(" + indexNum + " s)");
+    String boundsLabel = newBoundsLabel();
+    vaporPrinter.print("if ok goto :" + boundsLabel);
     vaporPrinter.print("Error(\"Array index out of bounds\")");
-    vaporPrinter.print("l" + nullLabelIndex + ": ok = LtS(-1, " + indexNum + ")");
-    ++nullLabelIndex;
-    vaporPrinter.print("if ok goto :l" + nullLabelIndex);
-    vaporPrinter.print("Error(\"Array index out of bounds\")");
-    vaporPrinter.print("l" + nullLabelIndex + ": o = MulS(" + indexNum + ", 4)");
-    ++nullLabelIndex;
-    vaporPrinter.print("d = Add(" + arrayName + ", o)");
+    //vaporPrinter.print("l" + nullLabelIndex + ": ok = LtS(-1 " + indexNum + ")");
+    //vaporPrinter.print("if ok goto :l" + nullLabelIndex);
+    //vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print(boundsLabel + ":");
+    vaporPrinter.print("o = MulS(" + indexNum + " 4)");
+    vaporPrinter.print("d = Add(" + arrayName + " o)");
     String temp = newTempVar();
     // store the value in [d+4] into a tempVar
     vaporPrinter.print(temp + " = [d+4]");
@@ -1179,13 +1189,15 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f1.accept(this);
     n.f2.accept(this);
     n.f3.accept(this);
-    String arg = synthTempVar;
+    String expr = synthTempVar;
     n.f4.accept(this);
 
     String result = newTempVar();
 
     //todo: keep track of array size for array.length!
-    vaporPrinter.print(result + " = HeapAllocZ(" + arg + ")");
+    vaporPrinter.print("bytes = MulS(" + expr + " 4)");
+    vaporPrinter.print("bytes = Add(bytes 4)");
+    vaporPrinter.print(result + " = HeapAllocZ(bytes)");
 
     //<ArrayAllocationExpression> = ST_INT
     inheritedType = SymbolType.ST_INT_ARR;

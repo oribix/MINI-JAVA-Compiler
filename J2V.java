@@ -9,7 +9,7 @@ public class J2V {
     try {
       Node root = parser.Goal();
       root.accept(new VaporVisitor());
-      System.out.println("Vapor code generated successfully.");
+      //System.out.println("Vapor code generated successfully.");
     }
     catch (ParseException e) {
       System.err.println("Encountered errors during parse.");
