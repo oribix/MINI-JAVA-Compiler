@@ -777,19 +777,21 @@ public class VaporVisitor extends DepthFirstVisitor {
     n.f0.accept(this);
     n.f1.accept(this);
     n.f2.accept(this);
-    vaporPrinter.print("if0 " + synthTempVar + " goto :if" + ifElseCount + "_else");
+    String ifElseLabel1 = "if" + ifElseCount + "_else";
+    vaporPrinter.print("if0 " + synthTempVar + " goto :" + ifElseLabel1);
     // remove scope before each label, add scope after each label
     vaporPrinter.addScope();
     n.f3.accept(this);
     n.f4.accept(this);
-    vaporPrinter.print("goto :if" + ifElseCount + "_end");
+    String ifElseLabel2 = "if" + ifElseCount + "_end";
+    vaporPrinter.print("goto :" + ifElseLabel2);
     n.f5.accept(this);
     vaporPrinter.removeScope();
-    vaporPrinter.print("if" + ifElseCount + "_else:");
+    vaporPrinter.print(ifElseLabel1 + ":");
     vaporPrinter.addScope();
     n.f6.accept(this);
     vaporPrinter.removeScope();
-    vaporPrinter.print("if" + ifElseCount + "_end:");
+    vaporPrinter.print(ifElseLabel2 + ":");
   }
 
   ///** Generates a while loop using labels and goto instructions
