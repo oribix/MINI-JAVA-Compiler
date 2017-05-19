@@ -781,12 +781,12 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.print(boundsLabel + ":");
     vaporPrinter.print("o = MulS(" + indexNum + " 4)");
     ++nullLabelIndex;
-    vaporPrinter.print("d = Add(" + identifierName + " o)");
+    vaporPrinter.print("dL = Add(" + identifierName + " o)");
     n.f3.accept(this);
     n.f4.accept(this);
     n.f5.accept(this);
     // store the expression in synthTempVar into the address in [d+4]
-    vaporPrinter.print("[d+4] = " + synthTempVar);
+    vaporPrinter.print("[dL+4] = " + synthTempVar);
     n.f6.accept(this);
   }
 
@@ -1025,10 +1025,10 @@ public class VaporVisitor extends DepthFirstVisitor {
     //vaporPrinter.print("Error(\"Array index out of bounds\")");
     vaporPrinter.print(boundsLabel + ":");
     vaporPrinter.print("o = MulS(" + indexNum + " 4)");
-    vaporPrinter.print("d = Add(" + arrayName + " o)");
+    vaporPrinter.print("dR = Add(" + arrayName + " o)");
     String temp = newTempVar();
     // store the value in [d+4] into a tempVar
-    vaporPrinter.print(temp + " = [d+4]");
+    vaporPrinter.print(temp + " = [dR+4]");
     synthTempVar = temp;
     n.f3.accept(this);
     //<ArrayLookup> = ST_INT
