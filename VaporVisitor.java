@@ -16,6 +16,7 @@ public class VaporVisitor extends DepthFirstVisitor {
   int labelnum;
   int ifElseCount;
   int whileCount;
+  int andCount;
 
   // Phase1 code
   SymbolTable symbolTable;
@@ -45,6 +46,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     
     ifElseCount = 0;
     whileCount = 0;
+    andCount = 0;
   }
 
   //-----------------------------
@@ -786,16 +788,16 @@ public class VaporVisitor extends DepthFirstVisitor {
   // */
   public void visit(IfStatement n) {
 	++ifElseCount;
+	String ifElseLabel1 = "if" + ifElseCount + "_else";
+	String ifElseLabel2 = "if" + ifElseCount + "_end";
     n.f0.accept(this);
     n.f1.accept(this);
     n.f2.accept(this);
-    String ifElseLabel1 = "if" + ifElseCount + "_else";
     vaporPrinter.print("if0 " + synthTempVar + " goto :" + ifElseLabel1);
     // remove scope before each label, add scope after each label
     vaporPrinter.addScope();
     n.f3.accept(this);
     n.f4.accept(this);
-    String ifElseLabel2 = "if" + ifElseCount + "_end";
     vaporPrinter.print("goto :" + ifElseLabel2);
     n.f5.accept(this);
     vaporPrinter.removeScope();
@@ -869,19 +871,34 @@ public class VaporVisitor extends DepthFirstVisitor {
    * f2 -> PrimaryExpression()
    */
   public void visit(AndExpression n) {
+	++andCount;
+	String falseLabel = "false" + andCount;
+	String endLabel = "end" + andCount;
     n.f0.accept(this);
     String arg1 = synthTempVar;
     n.f1.accept(this);
     n.f2.accept(this);
     String arg2 = synthTempVar;
+    String temp1 = newTempVar();
+    String temp2 = newTempVar();
+    String temp3 = newTempVar();
+    vaporPrinter.print(temp1 + " = Eq(" + arg1 + " 0)");
+    vaporPrinter.print("if " + temp1 + " goto :" + falseLabel);
+    vaporPrinter.print(temp2 + " = Eq(" + arg2 + " 0)");
+    vaporPrinter.print("if " + temp2 + " goto :" + falseLabel);
+    vaporPrinter.print(temp3 + " = 1");
+    vaporPrinter.print("goto :" + endLabel);
+    vaporPrinter.print(falseLabel + ':');
+    vaporPrinter.print(temp3 + " = 0");
+    vaporPrinter.print(endLabel + ':');
 
     //<AndExpression> = ST_Boolean
     inheritedType = SymbolType.ST_BOOLEAN;
 
-    String temp = newTempVar();
-    vaporPrinter.print(temp + " = And(" + arg1 + " " + arg2 + ")");
+    //String temp = newTempVar();
+    //vaporPrinter.print(temp + " = And(" + arg1 + " " + arg2 + ")");
 
-    synthTempVar = temp;
+    synthTempVar = temp3;
   }
 
   /**
@@ -1234,7 +1251,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     String arg1 = synthTempVar;
 
     String result  = newTempVar();
-    vaporPrinter.print(result + " = eq(" + arg1 + " 0)");
+    vaporPrinter.print(result + " = Eq(" + arg1 + " 0)");
 
     //<NotExpression> = ST_BOOLEAN
     inheritedType = SymbolType.ST_BOOLEAN;
