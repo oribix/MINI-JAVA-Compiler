@@ -817,9 +817,10 @@ public class VaporVisitor extends DepthFirstVisitor {
   // */
   public void visit(WhileStatement n) {
 	++whileCount;
+	String whileLab = "while" + whileCount;
     n.f0.accept(this);
     n.f1.accept(this);
-    vaporPrinter.print("while" + whileCount + ":");
+    vaporPrinter.print(whileLab + ":");
     n.f2.accept(this);
     String whileLabel = "while" + whileCount + "_end";
     vaporPrinter.print("if0 " + synthTempVar + " goto :" + whileLabel);
@@ -827,7 +828,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.addScope();
     n.f3.accept(this);
     n.f4.accept(this);
-    vaporPrinter.print("goto :while" + whileCount);
+    vaporPrinter.print("goto :" + whileLab);
     vaporPrinter.removeScope();
     vaporPrinter.print(whileLabel + ":");
   }
