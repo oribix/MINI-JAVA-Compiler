@@ -348,6 +348,7 @@ class Visitor {
 	return 0;
     }
 
+public int taco() {return 0;}
 }
 
 

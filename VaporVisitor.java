@@ -313,9 +313,13 @@ public class VaporVisitor extends DepthFirstVisitor {
 	void createVMT(ClassData cd) {
 		vaporPrinter.print("const vmt_" + cd.getClassName());
 
-    if (!createVMTHelper(cd))
+    LinkedHashMap<String, NodeToken> methodNames = new LinkedHashMap<>();
+    if (!createVMTHelper(cd, methodNames))
       vaporPrinter.print("  -1");
-		System.out.println();
+    else
+      for (String s : methodNames.keySet())
+        vaporPrinter.print(1, ":" + methodNames.get(s) + "." + s);
+    vaporPrinter.print("");
 		//Vector<MethodData> methods = cd.getMethods();
 		//if (!methods.isEmpty()) {
 		//	String prefix = "  :" + cd.getClassName() + ".";
@@ -328,7 +332,7 @@ public class VaporVisitor extends DepthFirstVisitor {
 
   // function that outputs parents' methods w/o the first vmt line
   // returns bool if function printed any methods
-	boolean createVMTHelper(ClassData cd) {
+	boolean createVMTHelper(ClassData cd, LinkedHashMap<String, NodeToken> methodNames) {
 	  if (cd == null)
 	    return false;
 
@@ -336,16 +340,17 @@ public class VaporVisitor extends DepthFirstVisitor {
     boolean parentsPrinted = false;
     if (cd.getParent() != null) {
       ClassData parentCD = (ClassData) symbolTable.getSymbolData(cd.getParent(), SymbolType.ST_CLASS);
-      parentsPrinted = createVMTHelper(parentCD);
+      parentsPrinted = createVMTHelper(parentCD, methodNames);
     }
 
     // print methods
 		Vector<MethodData> methods = cd.getMethods();
 		if (!methods.isEmpty()) {
-			String prefix = "  :" + cd.getClassName() + ".";
+			//String prefix = "  :" + cd.getClassName() + ".";
 
 			for (MethodData md : methods)
-			  System.out.println(prefix + md.getName());
+			  methodNames.put(md.getName().toString(), cd.getClassName());
+			  //vaporPrinter.print(1, prefix + md.getName());
 
 		  return true;
 		}
