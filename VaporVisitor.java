@@ -734,7 +734,12 @@ public class VaporVisitor extends DepthFirstVisitor {
     String identifierName = synthTempVar;
     n.f1.accept(this);
     n.f2.accept(this);
-    vaporPrinter.print(identifierName + " = " + synthTempVar);
+    int fieldVarIndex = symbolTable.getFieldVarIndex(n.f0.f0, currentClassName);
+    if (fieldVarIndex == -1)
+      vaporPrinter.print(identifierName + " = " + synthTempVar);
+    else {
+      vaporPrinter.print("[this + " + (fieldVarIndex * 4 + 4) + "] = " + synthTempVar);
+    }
     n.f3.accept(this);
   }
 
@@ -750,7 +755,15 @@ public class VaporVisitor extends DepthFirstVisitor {
   // */
   public void visit(ArrayAssignmentStatement n) {
     n.f0.accept(this);
+
+    // If identifier corresponds to a field member, use "this" + offset instead.
     String identifierName = synthTempVar;
+    int fieldVarIndex = symbolTable.getFieldVarIndex(n.f0.f0, currentClassName);
+    if (fieldVarIndex != -1) {
+      identifierName = newTempVar();
+      vaporPrinter.print(identifierName + " = [this + " + (fieldVarIndex * 4 + 4) + "]");
+    }
+
     n.f1.accept(this);
     n.f2.accept(this);
     String indexNum = synthTempVar;

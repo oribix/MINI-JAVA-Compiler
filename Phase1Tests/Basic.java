@@ -43,6 +43,7 @@ class A {
 class B extends A{
   boolean zimbabwe;
   public int africa(int cape) {
+    zimbabwe = true;
     return horn;
   }
 }
@@ -57,7 +58,10 @@ class D extends C{
   boolean uganda;
   boolean tunisia;
   boolean togo;
+  int[] pelagieIslands;
   public int africa(int cape) {
+    pelagieIslands = new int[5];
+    pelagieIslands[0] = 5;
     return uganda;
   }
   public int jump(int a, B b) {
@@ -65,6 +69,8 @@ class D extends C{
     return 1 + 1;
   }
   public D test() {
+    boolean isUganda;
+    isUganda = uganda;
     return d;
   }
 }
