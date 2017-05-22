@@ -778,11 +778,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.print("ok = LtS(" + indexNum + " s)");
     String boundsLabel = newBoundsLabel();
     vaporPrinter.print("if ok goto :" + boundsLabel);
-    vaporPrinter.print("Error(\"Array index out of bounds\")");
-    //vaporPrinter.print("l" + nullLabelIndex + ": ok = LtS(-1 " + indexNum + ")");
-    //++nullLabelIndex;
-    //vaporPrinter.print("if ok goto :l" + nullLabelIndex);
-    //vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print("Error(\"array index out of bounds\")");
     vaporPrinter.print(boundsLabel + ":");
     vaporPrinter.print("o = MulS(" + indexNum + " 4)");
     ++nullLabelIndex;
@@ -1024,10 +1020,7 @@ public class VaporVisitor extends DepthFirstVisitor {
     vaporPrinter.print("ok = LtS(" + indexNum + " s)");
     String boundsLabel = newBoundsLabel();
     vaporPrinter.print("if ok goto :" + boundsLabel);
-    vaporPrinter.print("Error(\"Array index out of bounds\")");
-    //vaporPrinter.print("l" + nullLabelIndex + ": ok = LtS(-1 " + indexNum + ")");
-    //vaporPrinter.print("if ok goto :l" + nullLabelIndex);
-    //vaporPrinter.print("Error(\"Array index out of bounds\")");
+    vaporPrinter.print("Error(\"array index out of bounds\")");
     vaporPrinter.print(boundsLabel + ":");
     vaporPrinter.print("o = MulS(" + indexNum + " 4)");
     vaporPrinter.print("dR = Add(" + arrayName + " o)");
