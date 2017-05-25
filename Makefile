@@ -22,8 +22,11 @@ hw2: clean
 	cp vaportools/* hw2/vaportools/
 	tar -czf hw2.tgz hw2/
 
-test: clean J2V.class
-	java J2V < Phase1Tests/Basic.java
+test: clean V2VM.class
+	java V2VM < Phase3Tests/Factorial.vapor 
+	
+V2VM.class: V2VM.java
+	javac	V2VM.java -classpath vapor-parser.jar
 
 J2V.class: J2V.java
 	javac J2V.java
