@@ -21,36 +21,36 @@ class V2VM{
     VaporProgram ast;
     //MiniJavaParser parser = new MiniJavaParser(System.in);
     try {
-		ast = parseVapor(System.in,System.out);
-	}
-	catch (IOException e) {
-		System.err.println("error message e.getMessage");
-	}
+      ast = parseVapor(System.in,System.out);
+    }
+    catch (IOException e) {
+      System.err.println("error message e.getMessage()");
+    }
 
   }
   
   public static VaporProgram parseVapor(InputStream in, PrintStream err) throws IOException {
-  Op[] ops = {
-    Op.Add, Op.Sub, Op.MulS, Op.Eq, Op.Lt, Op.LtS,
-    Op.PrintIntS, Op.HeapAllocZ, Op.Error,
-  };
-  boolean allowLocals = true;
-  String[] registers = null;
-  boolean allowStack = false;
+    Op[] ops = {
+      Op.Add, Op.Sub, Op.MulS, Op.Eq, Op.Lt, Op.LtS,
+      Op.PrintIntS, Op.HeapAllocZ, Op.Error,
+    };
+    boolean allowLocals = true;
+    String[] registers = null;
+    boolean allowStack = false;
 
-  VaporProgram tree;
-  try {
-    tree = VaporParser.run(new InputStreamReader(in), 1, 1,
-                           java.util.Arrays.asList(ops),
-                           allowLocals, registers, allowStack);
-  }
-  catch (ProblemException ex) {
-    err.println(ex.getMessage());
-    return null;
-  }
+    VaporProgram tree;
+    try {
+      tree = VaporParser.run(new InputStreamReader(in), 1, 1,
+                             java.util.Arrays.asList(ops),
+                             allowLocals, registers, allowStack);
+    }
+    catch (ProblemException ex) {
+      err.println(ex.getMessage());
+      return null;
+    }
 
-  return tree;
-}
+    return tree;
+  }
 
 }
 

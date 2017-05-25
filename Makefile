@@ -1,4 +1,4 @@
-all: clean J2V.class
+all: clean V2VM.class
 
 run:
 	./Phase1Tester/run ./Phase1Tester/SelfTestCases/ ./hw1.tgz
@@ -23,8 +23,8 @@ hw2: clean
 	tar -czf hw2.tgz hw2/
 
 test: clean V2VM.class
-	java V2VM < Phase3Tests/Factorial.vapor 
-	
+	java V2VM < Phase3Tests/Factorial.vapor
+
 V2VM.class: V2VM.java
 	javac	V2VM.java -classpath vapor-parser.jar
 
@@ -37,8 +37,7 @@ Typecheck.class: Typecheck.java
 clean:
 	rm -f *.class
 	rm -f */*.class
-	rm -rf hw1*
-	rm -rf hw2*
+	rm -f *.tgz
 	rm -rf hw3*
 	rm -rf Phase1Tester/Output
 	rm -rf Phase2Tester/Output
