@@ -5,6 +5,7 @@ import cs132.util.ProblemException;
 import cs132.vapor.parser.VaporParser;
 import cs132.vapor.ast.VaporProgram;
 import cs132.vapor.ast.VBuiltIn.Op;
+import cs132.vapor.ast.VDataSegment;
 
 import java.io.InputStreamReader;
 import java.io.IOException;
@@ -12,8 +13,6 @@ import java.io.PrintStream;
 
 import java.io.InputStream;
 import java.text.ParseException;
-
-
 
 class V2VM{
   public static void main(String args[]){
@@ -28,7 +27,11 @@ class V2VM{
 
         System.out.println();
       }
+      
+      VaporTranslator translator = new VaporTranslator(ast);
+      translator.test();
     }
+    
     catch (IOException e) {
       System.err.println("error message e.getMessage()");
     }
