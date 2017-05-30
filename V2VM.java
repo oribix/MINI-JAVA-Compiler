@@ -22,6 +22,12 @@ class V2VM{
     //MiniJavaParser parser = new MiniJavaParser(System.in);
     try {
       ast = parseVapor(System.in,System.out);
+      for (int i = 0; i < ast.functions.length; i++) {
+        for (int j = 0; j < ast.functions[i].params.length; j++)
+          System.out.println(ast.functions[i].params[j].ident);
+
+        System.out.println();
+      }
     }
     catch (IOException e) {
       System.err.println("error message e.getMessage()");
