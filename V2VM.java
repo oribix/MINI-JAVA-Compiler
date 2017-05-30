@@ -16,24 +16,16 @@ import java.text.ParseException;
 
 class V2VM{
   public static void main(String args[]){
-    //taken from JTB tutorial
     VaporProgram ast;
-    //MiniJavaParser parser = new MiniJavaParser(System.in);
     try {
       ast = parseVapor(System.in,System.out);
-      for (int i = 0; i < ast.functions.length; i++) {
-        for (int j = 0; j < ast.functions[i].params.length; j++)
-          System.out.println(ast.functions[i].params[j].ident);
-
-        System.out.println();
-      }
       
       VaporTranslator translator = new VaporTranslator(ast);
       translator.test();
     }
     
     catch (IOException e) {
-      System.err.println("error message e.getMessage()");
+      System.err.println(e.getMessage());
     }
 
   }
