@@ -6,8 +6,6 @@ import cs132.vapor.ast.VGoto;
 import cs132.vapor.ast.VMemRead;
 import cs132.vapor.ast.VMemWrite;
 import cs132.vapor.ast.VReturn;
-import cs132.vapor.ast.VCodeLabel;
-import cs132.vapor.ast.VFunction;
 import cs132.vapor.ast.VInstr.VisitorPR;
 
 public class VVisitor extends 
