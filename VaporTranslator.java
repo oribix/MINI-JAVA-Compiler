@@ -16,33 +16,14 @@ public class VaporTranslator{
     System.out.println("RUNNING TESTS");
     
     printDataSegments();
-    
-    for (int i = 0; i < ast.functions.length; i++) { //outputting parameters
-      String line = "func " + ast.functions[i].ident + printStackArrays(
-      // pass in different in, out, local values once we figure out how to calculate them
-        ast.functions[i].stack.in, 
-        ast.functions[i].stack.out, 
-        ast.functions[i].stack.local);
-      System.out.println(line);
-      //outputting parameters of each function on its own line
-      for (int j = 0; j < ast.functions[i].params.length; j++) 
-      {
-        System.out.println("  " + ast.functions[i].params[j].ident);
-      }
-
+    for (int i = 0; i < ast.functions.length; i++) {
+      System.out.println(getFunctionHeaders(i));
       System.out.println();
     }
       
     System.out.println("ENDING TESTS");
   }
   
-  String printStackArrays(int in, int out, int local)
-  {
-    String line = " [in " + in + 
-                  ", out " + out +
-                  ", local " + local + "]";
-    return line;
-  }
   void printDataSegments()
   {
     for(VDataSegment VDS : ast.dataSegments)
@@ -55,5 +36,21 @@ public class VaporTranslator{
       }
       System.out.println("");
     }
+  }
+  String getFunctionHeaders(int i)
+  {
+    String line = "func " + ast.functions[i].ident + printStackArrays(
+      // pass in different in, out, local values once we figure out how to calculate them
+        ast.functions[i].stack.in, 
+        ast.functions[i].stack.out, 
+        ast.functions[i].stack.local);
+    return line;
+  }
+  String printStackArrays(int in, int out, int local)
+  {
+    String line = " [in " + in + 
+                  ", out " + out +
+                  ", local " + local + "]";
+    return line;
   }
 }
