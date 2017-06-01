@@ -8,12 +8,16 @@ import cs132.vapor.ast.VMemRef;
 import cs132.vapor.ast.VMemWrite;
 import cs132.vapor.ast.VReturn;
 import cs132.vapor.ast.VInstr.VisitorPR;
+import cs132.vapor.ast.VOperand;
+import cs132.vapor.ast.VMemRef;
 
 public class VVisitor extends 
   VisitorPR<String, String, RuntimeException> {
     
     
   public String visit(String s, VAssign a) throws RuntimeException {
+    // FIXME: You can print a.dest, which contains the variable. For now, just print $t0.
+    System.out.println("$t0" + " = " + a.source);
     return "VAssign";
   }
   
@@ -30,10 +34,36 @@ public class VVisitor extends
   }
   
   public String visit(String s, VBuiltIn c) throws RuntimeException {
+    String code = new String();
+    if(c.dest != null)
+      code = c.dest + " = " + c.op.name + "(";
+    else
+      code = c.op.name + "(";
+    String argz = new String();
+    for(VOperand arg : c.args) {
+      argz = argz + " " + arg.toString();
+    }
+    argz = argz.substring(1);
+    code += argz;
+    code += ")";
+    System.out.println(code);
     return "VBuiltIn";
   }
   
   public String visit(String s, VCall c) throws RuntimeException {
+    String code = new String();
+    if(c.dest != null)
+      code = c.dest + " = call " + c.addr + "(";
+    else
+      code = c.addr + "(";
+    String argz = new String();
+    for(VOperand arg : c.args) {
+      argz = argz + " " + arg.toString();
+    }
+    argz = argz.substring(1);
+    code += argz;
+    code += ")";
+    System.out.println(code);
     return "VCall";
   }
   
@@ -53,7 +83,7 @@ public class VVisitor extends
 
     return "VMemRead";
   }
-  
+
   public String visit(String s, VMemWrite w) throws RuntimeException {
     String base = ((VMemRef.Global)w.dest).base.toString();
     int byteOffset = ((VMemRef.Global)w.dest).byteOffset;
@@ -69,6 +99,13 @@ public class VVisitor extends
   }
   
   public String visit(String s, VReturn r) throws RuntimeException {
+    if(r.value == null) {
+      System.out.println("ret");
+    }
+    else {
+      System.out.println("$v0 = " + r.value);
+      System.out.println("ret"); //store return value in $v0
+    }
     return "VReturn";
   }
 }
