@@ -13,34 +13,34 @@ public class VVisitor extends
     
     
   public String visit(String s, VAssign a) throws RuntimeException {
-    return "thanks";
+    return "VAssign";
   }
   
   public String visit(String s, VBranch b) throws RuntimeException {
-    return "thanks";
+    return "VBranch";
   }
   
   public String visit(String s, VBuiltIn c) throws RuntimeException {
-    return "thanks";
+    return "VBuiltIn";
   }
   
   public String visit(String s, VCall c) throws RuntimeException {
-    return "thanks";
+    return "VCall";
   }
   
   public String visit(String s, VGoto g) throws RuntimeException {
-    return "thanks";
+    return "VGoto";
   }
   
   public String visit(String s, VMemRead r) throws RuntimeException {
-    return "thanks";
+    return "VMemRead";
   }
   
   public String visit(String s, VMemWrite w) throws RuntimeException {
-    return "thanks";
+    return "VMemWrite";
   }
   
   public String visit(String s, VReturn r) throws RuntimeException {
-    return "thanks";
+    return "VReturn";
   }
 }

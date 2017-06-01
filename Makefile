@@ -23,11 +23,11 @@ hw2: clean
 	tar -czf hw2.tgz hw2/
 
 test: clean V2VM.class
-	java -cp "./:vapor-parser.jar" V2VM < Phase3Tests/1-Basic.vapor
+	java -cp "./:vapor-parser.jar" V2VM < Phase3Tests/Factorial.vapor
 
 
 V2VM.class: V2VM.java
-	javac	V2VM.java -classpath vapor-parser.jar
+	javac VaporTranslator.java VVisitor.java V2VM.java -classpath vapor-parser.jar
 
 J2V.class: J2V.java
 	javac J2V.java

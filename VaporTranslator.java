@@ -1,14 +1,19 @@
 import cs132.vapor.ast.VaporProgram;
 import cs132.vapor.ast.VDataSegment;
 import cs132.vapor.ast.VOperand.Static;
+import cs132.vapor.ast.VInstr;
+import cs132.vapor.ast.VFunction;
+
 
 public class VaporTranslator{
   // FIELDS
   VaporProgram ast;
+  VVisitor visitor;
   
   // CONSTRUCTORS
   public VaporTranslator(VaporProgram inAST){
     ast = inAST;
+    visitor = new VVisitor();
   }
   
   // METHODS
@@ -18,6 +23,10 @@ public class VaporTranslator{
     printDataSegments();
     for (int i = 0; i < ast.functions.length; i++) {
       System.out.println(getFunctionHeaders(i));
+      for(VInstr inst : ast.functions[i].body) {
+        String TESTER = inst.accept(new String("test"), visitor);
+        System.out.println(TESTER);
+      }
       System.out.println();
     }
       
