@@ -15,6 +15,8 @@ public class VVisitor extends
     
     
   public String visit(String s, VAssign a) throws RuntimeException {
+    // FIXME: You can print a.dest, which contains the variable. For now, just print $t0.
+    System.out.println("$t0" + " = " + a.source);
     return "VAssign";
   }
   
@@ -75,6 +77,7 @@ public class VVisitor extends
       System.out.println("ret");
     }
     else {
+      System.out.println("$v0 = " + r.value);
       System.out.println("ret"); //store return value in $v0
     }
     return "VReturn";
