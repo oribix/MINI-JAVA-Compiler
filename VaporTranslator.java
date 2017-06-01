@@ -17,22 +17,17 @@ public class VaporTranslator{
   }
   
   // METHODS
-  void test(){ // possibly rename to translate()
-    System.out.println("RUNNING TESTS");
-    
+  void translate(){ // possibly rename to translate()
     printDataSegments();
     for (int i = 0; i < ast.functions.length; i++) {
       System.out.println(getFunctionHeaders(i));
       for(VInstr inst : ast.functions[i].body) {
         String TESTER = inst.accept(new String("test"), visitor);
-        System.out.println(TESTER);
       }
       System.out.println();
     }
-      
-    System.out.println("ENDING TESTS");
   }
-  
+
   void printDataSegments()
   {
     for(VDataSegment VDS : ast.dataSegments)

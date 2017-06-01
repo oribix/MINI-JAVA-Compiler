@@ -19,17 +19,17 @@ class V2VM{
     VaporProgram ast;
     try {
       ast = parseVapor(System.in,System.out);
-      
+
       VaporTranslator translator = new VaporTranslator(ast);
-      translator.test();
+      translator.translate();
     }
-    
+
     catch (IOException e) {
       System.err.println(e.getMessage());
     }
 
   }
-  
+
   public static VaporProgram parseVapor(InputStream in, PrintStream err) throws IOException {
     Op[] ops = {
       Op.Add, Op.Sub, Op.MulS, Op.Eq, Op.Lt, Op.LtS,
