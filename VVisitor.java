@@ -11,16 +11,16 @@ import cs132.vapor.ast.VInstr.VisitorPR;
 import cs132.vapor.ast.VOperand;
 import cs132.vapor.ast.VMemRef;
 
-public class VVisitor extends 
+public class VVisitor extends
   VisitorPR<String, String, RuntimeException> {
-    
-    
+
+
   public String visit(String s, VAssign a) throws RuntimeException {
     // FIXME: You can print a.dest, which contains the variable. For now, just print $t0.
     System.out.println("$t0" + " = " + a.source);
     return "VAssign";
   }
-  
+
   public String visit(String s, VBranch b) throws RuntimeException {
     String ifString = "";
     if(b.positive)
@@ -32,7 +32,7 @@ public class VVisitor extends
 
     return "VBranch";
   }
-  
+
   public String visit(String s, VBuiltIn c) throws RuntimeException {
     String code = new String();
     if(c.dest != null)
@@ -49,7 +49,7 @@ public class VVisitor extends
     System.out.println(code);
     return "VBuiltIn";
   }
-  
+
   public String visit(String s, VCall c) throws RuntimeException {
     String code = new String();
     if(c.dest != null)
@@ -66,12 +66,12 @@ public class VVisitor extends
     System.out.println(code);
     return "VCall";
   }
-  
+
   public String visit(String s, VGoto g) throws RuntimeException {
     System.out.println("goto " + g.target);
     return "VGoto";
   }
-  
+
   public String visit(String s, VMemRead r) throws RuntimeException {
     String base = ((VMemRef.Global)r.source).base.toString();
     int byteOffset = ((VMemRef.Global)r.source).byteOffset;
@@ -97,7 +97,7 @@ public class VVisitor extends
 
     return "VMemWrite";
   }
-  
+
   public String visit(String s, VReturn r) throws RuntimeException {
     if(r.value == null) {
       System.out.println("ret");

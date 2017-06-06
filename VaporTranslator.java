@@ -3,6 +3,7 @@ import cs132.vapor.ast.VDataSegment;
 import cs132.vapor.ast.VOperand.Static;
 import cs132.vapor.ast.VInstr;
 import cs132.vapor.ast.VFunction;
+import cs132.vapor.ast.VCodeLabel;
 
 
 public class VaporTranslator{
@@ -19,9 +20,19 @@ public class VaporTranslator{
   // METHODS
   void translate(){ // possibly rename to translate()
     printDataSegments();
-    for (int i = 0; i < ast.functions.length; i++) {
-      System.out.println(getFunctionHeaders(i));
-      for(VInstr inst : ast.functions[i].body) {
+    for (VFunction function : ast.functions) {
+      System.out.println(getFunctionHeaders(function));
+      VInstr[] body = function.body;
+      VCodeLabel[] labels = function.labels;
+      int currLabel = 0;
+      for(int j = 0; j < body.length; j++) {
+        //print label if there is one
+        if(currLabel < labels.length && j+currLabel == labels[currLabel].instrIndex){
+          System.out.println(labels[currLabel++].ident + ":");
+        }
+
+        //print instruction
+        VInstr inst = body[j];
         String TESTER = inst.accept(new String("test"), visitor);
       }
       System.out.println();
@@ -41,20 +52,15 @@ public class VaporTranslator{
       System.out.println("");
     }
   }
-  String getFunctionHeaders(int i)
+
+  String getFunctionHeaders(VFunction f)
   {
-    String line = "func " + ast.functions[i].ident + printStackArrays(
-      // pass in different in, out, local values once we figure out how to calculate them
-        ast.functions[i].stack.in, 
-        ast.functions[i].stack.out, 
-        ast.functions[i].stack.local);
-    return line;
+    // pass in different in, out, local values once we figure out how to calculate them
+    return "func " + f.ident + printStackArrays(f.stack.in, f.stack.out, f.stack.local);
   }
+
   String printStackArrays(int in, int out, int local)
   {
-    String line = " [in " + in + 
-                  ", out " + out +
-                  ", local " + local + "]";
-    return line;
+    return " [in " + in + ", out " + out + ", local " + local + "]";
   }
 }
