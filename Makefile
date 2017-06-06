@@ -27,7 +27,7 @@ test: clean V2VM.class
 
 
 V2VM.class: V2VM.java
-	javac Registers.java VaporTranslator.java VVisitor.java V2VM.java -classpath vapor-parser.jar
+	javac  varLiveness.java VaporTranslator.java VVisitor.java V2VM.java -classpath vapor-parser.jar
 
 J2V.class: J2V.java
 	javac J2V.java

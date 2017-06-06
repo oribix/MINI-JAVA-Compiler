@@ -18,7 +18,7 @@ public class VaporTranslator{
   }
   
   // METHODS
-  void translate(){ // possibly rename to translate()
+  void translate(){
     printDataSegments();
     for (VFunction function : ast.functions) {
       System.out.println(getFunctionHeaders(function));
@@ -36,6 +36,8 @@ public class VaporTranslator{
         String TESTER = inst.accept(new String("test"), visitor);
       }
       System.out.println();
+      visitor.printLiveness();
+      visitor.resetLineNum();
     }
   }
 
