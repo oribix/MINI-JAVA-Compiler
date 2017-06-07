@@ -21,7 +21,10 @@ public class VaporTranslator{
   void translate(){
     printDataSegments();
     for (VFunction function : ast.functions) {
+      // Print function headers
       System.out.println(getFunctionHeaders(function));
+
+      // Print function code
       VInstr[] body = function.body;
       VCodeLabel[] labels = function.labels;
       int currLabel = 0;
@@ -35,6 +38,7 @@ public class VaporTranslator{
         VInstr inst = body[j];
         String TESTER = inst.accept(new String("test"), visitor);
       }
+
       System.out.println();
       visitor.removeRedundant(function.vars, function.params);
       visitor.printLiveness();
@@ -58,8 +62,23 @@ public class VaporTranslator{
 
   String getFunctionHeaders(VFunction f)
   {
+    // Calculate in, out, and local (local NOT done yet)
+    OutStackVisitor osv = new OutStackVisitor();
+    int outSize = 0, inSize = 0, localSize = 0;
+
+    if (f.params.length > 4) 
+      inSize = f.params.length; // Size of in stack
+    else
+      inSize = 0;
+
+    for(VInstr inst : f.body) 
+      outSize = Math.max(inst.accept(osv), outSize);  // Size of out stack
+
+    if (outSize <= 4)
+      outSize = 0;
+
     // pass in different in, out, local values once we figure out how to calculate them
-    return "func " + f.ident + printStackArrays(f.stack.in, f.stack.out, f.stack.local);
+    return "func " + f.ident + printStackArrays(inSize, outSize, localSize);
   }
 
   String printStackArrays(int in, int out, int local)
