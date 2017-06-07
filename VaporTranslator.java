@@ -9,16 +9,16 @@ import cs132.vapor.ast.VCodeLabel;
 public class VaporTranslator{
   // FIELDS
   VaporProgram ast;
-  VVisitor visitor;
   
   // CONSTRUCTORS
   public VaporTranslator(VaporProgram inAST){
     ast = inAST;
-    visitor = new VVisitor();
   }
   
   // METHODS
   void translate(){
+    VVisitor visitor; = new VVisitor();
+
     printDataSegments();
     for (VFunction function : ast.functions) {
       // Print function headers
