@@ -40,21 +40,14 @@ public class VaporTranslator{
 
         //print instruction
         VInstr inst = body[j];
-        //String TESTER = inst.accept(new String("test"), visitor);
         String TEST2 = inst.accept(new String("test"), liveVisitor);
+        String TESTER = inst.accept(new String("test"), visitor);
       }
 
       System.out.println();
       liveVisitor.removeRedundant(function.vars, function.params);
       liveVisitor.printLiveness();
       liveVisitor.resetLineNum();
-      System.out.println("!!!!!!!!!!!!!!!!!\nPRINTING ALL FUNCTION VARS\n!!!!!!!!!!!!!!!!!!");
-      for(String vName : function.vars)
-        System.out.println(vName);
-      System.out.println("!!!!!!!!!!!!!!!!!\nPRINTING ALL PARAM VARS\n!!!!!!!!!!!!!!!!!!");
-      for(VVarRef.Local pName : function.params){
-        System.out.println(pName.ident);
-      }
     }
   }
 
