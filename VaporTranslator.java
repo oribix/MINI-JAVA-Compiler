@@ -4,17 +4,20 @@ import cs132.vapor.ast.VOperand.Static;
 import cs132.vapor.ast.VInstr;
 import cs132.vapor.ast.VFunction;
 import cs132.vapor.ast.VCodeLabel;
+import cs132.vapor.ast.VVarRef;
 
 
 public class VaporTranslator{
   // FIELDS
   VaporProgram ast;
   VVisitor visitor;
+  LivenessVisitor liveVisitor;
   
   // CONSTRUCTORS
   public VaporTranslator(VaporProgram inAST){
     ast = inAST;
     visitor = new VVisitor();
+    liveVisitor = new LivenessVisitor();
   }
   
   // METHODS
@@ -36,13 +39,21 @@ public class VaporTranslator{
 
         //print instruction
         VInstr inst = body[j];
-        String TESTER = inst.accept(new String("test"), visitor);
+        //String TESTER = inst.accept(new String("test"), visitor);
+        String TEST2 = inst.accept(new String("test"), liveVisitor);
       }
 
       System.out.println();
-      visitor.removeRedundant(function.vars, function.params);
-      visitor.printLiveness();
-      visitor.resetLineNum();
+      liveVisitor.removeRedundant(function.vars, function.params);
+      liveVisitor.printLiveness();
+      liveVisitor.resetLineNum();
+      System.out.println("!!!!!!!!!!!!!!!!!\nPRINTING ALL FUNCTION VARS\n!!!!!!!!!!!!!!!!!!");
+      for(String vName : function.vars)
+        System.out.println(vName);
+      System.out.println("!!!!!!!!!!!!!!!!!\nPRINTING ALL PARAM VARS\n!!!!!!!!!!!!!!!!!!");
+      for(VVarRef.Local pName : function.params){
+        System.out.println(pName.ident);
+      }
     }
   }
 
