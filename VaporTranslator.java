@@ -17,7 +17,7 @@ public class VaporTranslator{
   
   // METHODS
   void translate(){
-    VVisitor visitor; = new VVisitor();
+    VVisitor visitor = new VVisitor();
 
     printDataSegments();
     for (VFunction function : ast.functions) {
