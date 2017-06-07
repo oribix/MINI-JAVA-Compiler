@@ -15,6 +15,7 @@ public class VaporTranslator{
   HashMap<String, String> varRegMap;
   Registers registers;
 
+
   // CONSTRUCTORS
   public VaporTranslator(VaporProgram inAST){
     ast = inAST;
@@ -46,7 +47,18 @@ public class VaporTranslator{
       sortByEndPoint(active); // Keep active sorted by end point
     }
   }
-
+  
+  void expireOldIntervals(varLiveness i)
+  {
+    for(int j = 0; j < active.size(); j++) {
+      if(active.get(j).getEnd() >= i.getStart())
+        return;
+      varLiveness reg = active.remove(j);
+      --j;
+      registers.returnFreeReg(varRegMap.get(reg));
+    }
+  }
+  
   //Liveness Intervals
   Vector<varLiveness> calcLiveness(VFunction function){
     LivenessVisitor liveVisitor = new LivenessVisitor();
