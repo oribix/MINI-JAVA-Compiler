@@ -10,28 +10,51 @@ import cs132.vapor.ast.VVarRef;
 public class VaporTranslator{
   // FIELDS
   VaporProgram ast;
-  LivenessVisitor liveVisitor;
 
-  
   // CONSTRUCTORS
   public VaporTranslator(VaporProgram inAST){
     ast = inAST;
-    liveVisitor = new LivenessVisitor();
   }
-  
+
   // METHODS
   void translate(){
-    VVisitor visitor = new VVisitor();
+    calcLiveness();
+    printCode();
+  }
 
+  //Liveness Intervals
+  void calcLiveness(){
+    LivenessVisitor liveVisitor = new LivenessVisitor();
+    for (VFunction function : ast.functions) {
+      VInstr[] body = function.body;
+      //j is the line number
+      for(int j = 0; j < body.length; j++) {
+        //print instruction
+        VInstr inst = body[j];
+        String TEST2 = inst.accept(new String("test"), liveVisitor);
+      }
+
+      System.out.println(function.ident);
+      System.out.println();
+      liveVisitor.removeRedundant(function.vars, function.params);
+      liveVisitor.printLiveness(); //remove eventually
+      liveVisitor.resetLineNum();
+      System.out.println();
+    }
+    return;
+  }
+
+  void printCode(){
+    VVisitor visitor = new VVisitor();
     printDataSegments();
     for (VFunction function : ast.functions) {
       // Print function headers
       System.out.println(getFunctionHeaders(function));
 
-      // Print function code
       VInstr[] body = function.body;
       VCodeLabel[] labels = function.labels;
       int currLabel = 0;
+      //j is the line number
       for(int j = 0; j < body.length; j++) {
         //print label if there is one
         if(currLabel < labels.length && j+currLabel == labels[currLabel].instrIndex){
@@ -40,15 +63,12 @@ public class VaporTranslator{
 
         //print instruction
         VInstr inst = body[j];
-        String TEST2 = inst.accept(new String("test"), liveVisitor);
         String TESTER = inst.accept(new String("test"), visitor);
       }
 
       System.out.println();
-      liveVisitor.removeRedundant(function.vars, function.params);
-      liveVisitor.printLiveness();
-      liveVisitor.resetLineNum();
     }
+    return;
   }
 
   void printDataSegments()
