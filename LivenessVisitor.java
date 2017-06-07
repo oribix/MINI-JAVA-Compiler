@@ -45,20 +45,6 @@ public class LivenessVisitor extends
     }
   }
   
-  public void sort(Vector<varLiveness> lList ) // insertion sort because im lazy
-  {
-    varLiveness temp;
-    for (int i = 1; i < lList.size(); i++) {
-      for(int j = i ; j > 0 ; j--){
-        if(lList.get(j).end < lList.get(j-1).end){
-          temp = lList.get(j);
-          lList.set(j, lList.get(j-1));
-          lList.set(j-1, temp);
-        }
-      }
-    }
-  }
-  
   public void removeRedundant(String[] varNames,VVarRef.Local[] paramNames)
   {
     for(int i = 0; i < liveList.size(); i++)
@@ -94,7 +80,6 @@ public class LivenessVisitor extends
         }
       }
     }
-    sort(liveList);
   }
   public void printLiveness() //for testing
   {
