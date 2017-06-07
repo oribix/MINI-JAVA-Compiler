@@ -18,56 +18,54 @@ public class VaporTranslator{
 
   // METHODS
   void translate(){
-    Vector<varLiveness> unsortedLiveList = calcLiveness();
-    printCode();
+    printDataSegments();
+    for (VFunction function : ast.functions) {
+      Vector<varLiveness> liveList = calcLiveness(function);
+      printCode(function);
+    }
   }
 
   //Liveness Intervals
-  Vector<varLiveness> calcLiveness(){
+  Vector<varLiveness> calcLiveness(VFunction function){
     LivenessVisitor liveVisitor = new LivenessVisitor();
-    for (VFunction function : ast.functions) {
-      VInstr[] body = function.body;
-      //j is the line number
-      for(int j = 0; j < body.length; j++) {
-        //print instruction
-        VInstr inst = body[j];
-        String TEST2 = inst.accept(new String("test"), liveVisitor);
-      }
-
-      System.out.println(function.ident);
-      System.out.println();
-      liveVisitor.removeRedundant(function.vars, function.params);
-      liveVisitor.printLiveness(); //remove eventually
-      liveVisitor.resetLineNum();
-      System.out.println();
+    VInstr[] body = function.body;
+    //j is the line number
+    for(int j = 0; j < body.length; j++) {
+      //print instruction
+      VInstr inst = body[j];
+      String TEST2 = inst.accept(new String("test"), liveVisitor);
     }
+
+    System.out.println(function.ident);
+    System.out.println();
+    liveVisitor.removeRedundant(function.vars, function.params);
+    liveVisitor.printLiveness(); //remove eventually
+    liveVisitor.resetLineNum();
+    System.out.println();
     return liveVisitor.getLiveList();
   }
 
-  void printCode(){
+  void printCode(VFunction function){
     VVisitor visitor = new VVisitor();
-    printDataSegments();
-    for (VFunction function : ast.functions) {
-      // Print function headers
-      System.out.println(getFunctionHeaders(function));
+    // Print function headers
+    System.out.println(getFunctionHeaders(function));
 
-      VInstr[] body = function.body;
-      VCodeLabel[] labels = function.labels;
-      int currLabel = 0;
-      //j is the line number
-      for(int j = 0; j < body.length; j++) {
-        //print label if there is one
-        if(currLabel < labels.length && j+currLabel == labels[currLabel].instrIndex){
-          System.out.println(labels[currLabel++].ident + ":");
-        }
-
-        //print instruction
-        VInstr inst = body[j];
-        String TESTER = inst.accept(new String("test"), visitor);
+    VInstr[] body = function.body;
+    VCodeLabel[] labels = function.labels;
+    int currLabel = 0;
+    //j is the line number
+    for(int j = 0; j < body.length; j++) {
+      //print label if there is one
+      if(currLabel < labels.length && j+currLabel == labels[currLabel].instrIndex){
+        System.out.println(labels[currLabel++].ident + ":");
       }
 
-      System.out.println();
+      //print instruction
+      VInstr inst = body[j];
+      String TESTER = inst.accept(new String("test"), visitor);
     }
+
+    System.out.println();
     return;
   }
   public void sort(Vector<varLiveness> lList ) // insertion sort because im lazy
