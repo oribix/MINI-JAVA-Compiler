@@ -10,18 +10,19 @@ import cs132.vapor.ast.VVarRef;
 public class VaporTranslator{
   // FIELDS
   VaporProgram ast;
-  VVisitor visitor;
   LivenessVisitor liveVisitor;
+
   
   // CONSTRUCTORS
   public VaporTranslator(VaporProgram inAST){
     ast = inAST;
-    visitor = new VVisitor();
     liveVisitor = new LivenessVisitor();
   }
   
   // METHODS
   void translate(){
+    VVisitor visitor = new VVisitor();
+
     printDataSegments();
     for (VFunction function : ast.functions) {
       // Print function headers

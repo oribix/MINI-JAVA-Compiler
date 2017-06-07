@@ -76,13 +76,19 @@ public class VVisitor extends
         if( Objects.equals(name, new String(vName)) )
           validName = true;
       }
-      for(VVarRef.Local pName : paramNames){
-        if( Objects.equals(name, new String(pName.ident)) )
-          validName = true;
-      }
       if(!validName){
         liveList.remove(i);
         --i;
+      }
+    }
+    for(int i = 0; i < liveList.size(); i++)
+    {
+      String name = liveList.get(i).getName();
+      for(VVarRef.Local pName : paramNames){
+        if( Objects.equals(name, new String(pName.ident)) ) {
+          liveList.remove(i);
+          --i;
+        }
       }
     }
     sort(liveList);

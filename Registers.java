@@ -1,53 +1,81 @@
 import java.util.HashMap;
 
 public class Registers {
-  public String[] t, s, a, v;
-  //boolean[] tFree, sFree, aFree, vFree;
-  //HashMap<String, String> varMap;
+  // Note: Just realized that boolean arrays, the most EXPECTED part of a class like this, 
+  // are actually kinda useless here due to lowestT/S. I only added them to the boolean checks as 
+  // a sanity check and an excuse to use them. I'd remove them, but...I feel bad.
+
+  private boolean[] tUsed, sUsed;
+  private int lowestT, lowestS; // tracks lowest free index for t and s
 
   public Registers() {
-    t = new String[9];
-    s = new String[8];
-    a = new String[4];
-    v = new String[2];
+    tUsed = new boolean[9]; // default: initialized to false
+    sUsed = new boolean[8];
 
-    //tFree = new boolean[9];
-    //sFree = new boolean[8];
-    //aFree = new boolean[4];
-    //vFree = new boolean[2];
-
-    //varMap = new HashMap<>();
+    lowestT = 0;
+    lowestS = 0;
   }
 
-  public void setValue(char regLetter, int i, String var) {
-    switch (regLetter) {
-      case 't':
-        if (i < 9) {
-          t[i] = var;
-          //tFree[i] = false;
+  // Returns string like "s1" or "t5". Uses lowestT/S as an optimization to avoid
+  // searching the boolean array for free reg.
+  public String getFreeReg() {
+    if (lowestT < 9 && !tUsed[lowestT]) {
+      String reg = "t" + lowestT;
+      int i = lowestT;
+      tUsed[lowestT] = true;
+
+      for (; i < 9; i++) {
+        if (!tUsed[i]) {
+          lowestT = i;
+          break;
         }
-        break;
-      case 's':
-        if (i < 8) {
-          s[i] = var;
-          //sFree[i] = false;
+      }
+      if (i == 9)
+        lowestT = 9;
+
+      return reg;
+    } else if (lowestS < 8 && !sUsed[lowestS]) {
+      String reg = "s" + lowestS;
+      int i = lowestS;
+      sUsed[lowestS] = true;
+
+      for (; i < 8; i++) {
+        if (!sUsed[i]) {
+          lowestS = i;
+          break;
         }
-        break;
-      case 'a':
-        if (i < 4) {
-          a[i] = var;
-          //aFree[i] = false;
-        }
-        break;
-      case 'v':
-        if (i < 2) {
-          v[i] = var;
-          //vFree[i] = false;
-        }
-        break;
-      default:
-        System.err.println("Error: unrecognized register in register class.");
-        System.exit(-1);
+      }
+      if (i == 8)
+        lowestS = 8;
+
+      return reg;
+    } else {
+      return null;
+    }
+  }
+
+  // Takes argument like "s0" or "t7"
+  public void returnFreeReg(String reg) {
+    if (reg.length() != 2 || 
+        !Character.isAlphabetic(reg.charAt(0)) || 
+        !Character.isDigit(reg.charAt(1))) {
+      System.err.println("Error: Passed invalid string in Registers.returnFreeReg()");
+      System.exit(-1);
+    }
+
+    // Second char is the reg number
+    int i = reg.charAt(1) - '0';
+
+    // First char is t or s
+    if (reg.charAt(0) == 't') {
+      tUsed[i] = false;
+      lowestT = Math.min(i, lowestT);
+    } else if (reg.charAt(0) == 's') {
+      sUsed[i] = false;
+      lowestS = Math.min(i, lowestS);
+    } else {
+      System.err.println("Error: bad character in Registers.returnFreeReg()");
+      System.exit(-1);
     }
   }
 }
