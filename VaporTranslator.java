@@ -5,15 +5,20 @@ import cs132.vapor.ast.VInstr;
 import cs132.vapor.ast.VFunction;
 import cs132.vapor.ast.VCodeLabel;
 import cs132.vapor.ast.VVarRef;
+import java.util.HashMap;
 import java.util.Vector;
 
 public class VaporTranslator{
   // FIELDS
   VaporProgram ast;
+  Vector<varLiveness> active;
+  HashMap<String, String> varRegMap;
+  Registers registers;
 
   // CONSTRUCTORS
   public VaporTranslator(VaporProgram inAST){
     ast = inAST;
+    registers = new Registers();
   }
 
   // METHODS
@@ -22,6 +27,23 @@ public class VaporTranslator{
     for (VFunction function : ast.functions) {
       Vector<varLiveness> liveList = calcLiveness(function);
       printCode(function);
+    }
+  }
+
+  // Goes throught the list of intervals from a function
+  // By end of this function, all variables should be appropriately 
+  // mapped to either a register or a local stack position
+  void linearScanRegisterAllocation(Vector<varLiveness> liveList) {
+    active = new Vector<>();
+    for (varLiveness i : liveList) {
+      expireOldIntervals(i);
+      if (active.size() == Registers.R)
+        spillAtInterval(i);
+      else {
+        varRegMap.put(i.getName(), registers.getFreeReg());
+        active.add(i);
+      }
+      sortByEndPoint(active); // Keep active sorted by end point
     }
   }
 
@@ -68,7 +90,7 @@ public class VaporTranslator{
     System.out.println();
     return;
   }
-  public void sort(Vector<varLiveness> lList ) // insertion sort because im lazy
+  public void sortByEndPoint(Vector<varLiveness> lList ) // insertion sort because im lazy
   {
     varLiveness temp;
     for (int i = 1; i < lList.size(); i++) {
