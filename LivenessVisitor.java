@@ -19,7 +19,10 @@ public class LivenessVisitor extends
   public int lineNum = 1;
   Vector<varLiveness> liveList = new Vector<varLiveness>();
 
-
+  public Vector<varLiveness> getLiveList(){
+    return liveList;
+  }
+  
   public void resetLineNum()
   {
     lineNum = 1;

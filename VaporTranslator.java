@@ -5,7 +5,7 @@ import cs132.vapor.ast.VInstr;
 import cs132.vapor.ast.VFunction;
 import cs132.vapor.ast.VCodeLabel;
 import cs132.vapor.ast.VVarRef;
-
+import java.util.Vector;
 
 public class VaporTranslator{
   // FIELDS
@@ -18,12 +18,12 @@ public class VaporTranslator{
 
   // METHODS
   void translate(){
-    calcLiveness();
+    Vector<varLiveness> liveList = calcLiveness();
     printCode();
   }
 
   //Liveness Intervals
-  void calcLiveness(){
+  Vector<varLiveness> calcLiveness(){
     LivenessVisitor liveVisitor = new LivenessVisitor();
     for (VFunction function : ast.functions) {
       VInstr[] body = function.body;
@@ -41,7 +41,7 @@ public class VaporTranslator{
       liveVisitor.resetLineNum();
       System.out.println();
     }
-    return;
+    return liveVisitor.getLiveList();
   }
 
   void printCode(){
