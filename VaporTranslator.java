@@ -36,6 +36,7 @@ public class VaporTranslator{
         String TESTER = inst.accept(new String("test"), visitor);
       }
       System.out.println();
+      visitor.removeRedundant(function.vars, function.params);
       visitor.printLiveness();
       visitor.resetLineNum();
     }

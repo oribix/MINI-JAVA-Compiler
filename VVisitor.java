@@ -10,6 +10,7 @@ import cs132.vapor.ast.VReturn;
 import cs132.vapor.ast.VInstr.VisitorPR;
 import cs132.vapor.ast.VOperand;
 import cs132.vapor.ast.VMemRef;
+import cs132.vapor.ast.VVarRef;
 import java.util.Vector;
 import java.util.Objects;
 
@@ -40,7 +41,7 @@ public class VVisitor extends
       liveList.add(var);
     }
   }
-  public void removeRedundant()
+  public void removeRedundant(String[] varNames,VVarRef.Local[] paramNames)
   {
     for(int i = 0; i < liveList.size(); i++)
     {
@@ -52,10 +53,26 @@ public class VVisitor extends
         --i;
       }
     }
+    for(int i = 0; i < liveList.size(); i++)
+    {
+      boolean validName = false;
+      String name = liveList.get(i).getName();
+      for(String vName : varNames){
+        if( Objects.equals(name, new String(vName)) )
+          validName = true;
+      }
+      for(VVarRef.Local pName : paramNames){
+        if( Objects.equals(name, new String(pName.ident)) )
+          validName = true;
+      }
+      if(!validName){
+        liveList.remove(i);
+        --i;
+      }
+    }
   }
   public void printLiveness() //for testing
   {
-    removeRedundant();
     for(int i = 0; i < liveList.size(); i++)
     {
       String name = liveList.get(i).getName();
