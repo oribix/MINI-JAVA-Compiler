@@ -40,9 +40,6 @@ public class VaporTranslator{
       }
 
       System.out.println();
-      visitor.removeRedundant(function.vars, function.params);
-      visitor.printLiveness();
-      visitor.resetLineNum();
     }
   }
 
