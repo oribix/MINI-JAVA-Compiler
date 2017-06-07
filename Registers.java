@@ -4,6 +4,7 @@ public class Registers {
   // Note: Just realized that boolean arrays, the most EXPECTED part of a class like this, 
   // are actually kinda useless here due to lowestT/S. I only added them to the boolean checks as 
   // a sanity check and an excuse to use them. I'd remove them, but...I feel bad.
+  public static final int R = 17;
 
   private boolean[] tUsed, sUsed;
   private int lowestT, lowestS; // tracks lowest free index for t and s
