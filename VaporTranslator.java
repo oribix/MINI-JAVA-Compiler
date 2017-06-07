@@ -61,12 +61,11 @@ public class VaporTranslator{
   void spillAtInterval(varLiveness i){
     varLiveness spill = active.lastElement();
     if (spill.getEnd() > i.getEnd()){
-      //register[i] = register[spill]
+      varRegMap.put(i.getName(), varRegMap.get(spill.getName()));
       //location[spill] = new stack location
       active.remove(spill);
-      //add i to active, sorted by increasing end point
       active.add(i);
-      //todo: sort by endpoint
+      sortByEndPoint(active);
 
     }
     else{
