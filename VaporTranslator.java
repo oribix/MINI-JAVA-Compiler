@@ -31,7 +31,7 @@ public class VaporTranslator{
       localStackCnt = 8;
       Vector<varLiveness> liveList = calcLiveness(function);
       linearScanRegisterAllocation(liveList);
-      System.out.println(varRegMap.toString());
+      System.out.println("varRegMap: " + varRegMap.toString());
       printCode(function);
       registers = new Registers();// embraced the dark side
       varRegMap.clear();
@@ -93,12 +93,7 @@ public class VaporTranslator{
       String TEST2 = inst.accept(new String("test"), liveVisitor);
     }
 
-    System.out.println(function.ident);
-    System.out.println();
     liveVisitor.removeRedundant(function.vars, function.params);
-    liveVisitor.printLiveness(); //remove eventually
-    //liveVisitor.resetLineNum();
-    System.out.println();
     return liveVisitor.getLiveList();
   }
 
