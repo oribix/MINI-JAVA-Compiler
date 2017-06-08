@@ -22,9 +22,14 @@ public class VVisitor extends Visitor<RuntimeException> {
     this.varRegMap = varRegMap;
   }
 
+  String getReg(Object o){
+    String reg = varRegMap.get(o.toString());
+    if(reg != null) return reg;
+    else return o.toString();
+  }
+
   public void visit(VAssign a) throws RuntimeException {
-    // FIXME: You can print a.dest, which contains the variable. For now, just print $t0.
-    System.out.println("$t0" + " = " + a.source);
+    System.out.println(getReg(a.dest) + " = " + getReg(a.source));
   }
 
   public void visit(VBranch b) throws RuntimeException {
@@ -34,14 +39,14 @@ public class VVisitor extends Visitor<RuntimeException> {
     else
       ifString = "if0";
 
-    System.out.println(ifString + " " + b.value + " goto " + b.target);
+    System.out.println(ifString + " " + getReg(b.value) + " goto " + getReg(b.target));
   }
 
   public void visit(VBuiltIn c) throws RuntimeException {
     String code = new String();
     if(c.dest != null)
     {
-      code = c.dest + " = " + c.op.name + "(";
+      code = getReg(c.dest) + " = " + c.op.name + "(";
     }
     else
     {
@@ -49,7 +54,7 @@ public class VVisitor extends Visitor<RuntimeException> {
     }
     String argz = new String();
     for(VOperand arg : c.args) {
-      argz = argz + " " + arg.toString();
+      argz = argz + " " + getReg(arg);
     }
     argz = argz.substring(1);
     code += argz;
@@ -61,15 +66,15 @@ public class VVisitor extends Visitor<RuntimeException> {
     String code = new String();
     if(c.dest != null)
     {
-      code = c.dest + " = call " + c.addr + "(";
+      code = getReg(c.dest) + " = call " + getReg(c.addr) + "(";
     }
     else
     {
-      code = c.addr + "(";
+      code = getReg(c.addr) + "(";
     }
     String argz = new String();
     for(VOperand arg : c.args) {
-      argz = argz + " " + arg.toString();
+      argz = argz + " " + getReg(arg);
     }
     argz = argz.substring(1);
     code += argz;
@@ -86,11 +91,11 @@ public class VVisitor extends Visitor<RuntimeException> {
     int byteOffset = ((VMemRef.Global)r.source).byteOffset;
     if(base.equals("this") && byteOffset == 0)
     {
-      System.out.println(r.dest + " = [this]");
+      System.out.println(getReg(r.dest) + " = [this]");
     }
     else
     {
-      System.out.println(r.dest + " = [" + base + " + " +  byteOffset + "]");
+      System.out.println(getReg(r.dest) + " = [" + getReg(base) + " + " +  byteOffset + "]");
     }
   }
 
@@ -101,11 +106,11 @@ public class VVisitor extends Visitor<RuntimeException> {
     String src = w.source.toString();
     if(byteOffset == 0)
     {
-      System.out.println("[" + base + "] = " + src);
+      System.out.println("[" + getReg(base) + "] = " + getReg(src));
     }
     else
     {
-      System.out.println("[" + base + " + " + byteOffset + "] = " + src);
+      System.out.println("[" + getReg(base) + " + " + byteOffset + "] = " + getReg(src));
     }
   }
 
@@ -114,7 +119,7 @@ public class VVisitor extends Visitor<RuntimeException> {
       System.out.println("ret");
     }
     else {
-      System.out.println("$v0 = " + r.value);
+      System.out.println("$v0 = " + getReg(r.value));
       System.out.println("ret"); //store return value in $v0
     }
   }
