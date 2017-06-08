@@ -12,19 +12,22 @@ public class VaporTranslator{
   // FIELDS
   VaporProgram ast;
   Vector<varLiveness> active;
-  HashMap<String, String> varRegMap;
+  HashMap<String, String> varRegMap;//(var name, register/stack loc)
   Registers registers;
+  int localStackCnt;
 
   // CONSTRUCTORS
   public VaporTranslator(VaporProgram inAST){
     ast = inAST;
     registers = new Registers();
+    localStackCnt = 0;
   }
 
   // METHODS
   void translate(){
     printDataSegments();
     for (VFunction function : ast.functions) {
+      localStackCnt = 8;
       Vector<varLiveness> liveList = calcLiveness(function);
       printCode(function);
     }
@@ -62,14 +65,14 @@ public class VaporTranslator{
     varLiveness spill = active.lastElement();
     if (spill.getEnd() > i.getEnd()){
       varRegMap.put(i.getName(), varRegMap.get(spill.getName()));
-      //location[spill] = new stack location
+      varRegMap.put(spill.getName(), "local[" + localStackCnt++ + "]");
       active.remove(spill);
       active.add(i);
       sortByEndPoint(active);
 
     }
     else{
-      //location[i] = new stack location
+      varRegMap.put(i.getName(), "local[" + localStackCnt++ + "]");
     }
     return;
   }
