@@ -14,12 +14,15 @@ import cs132.vapor.ast.VVarRef;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.Objects;
+import java.util.LinkedHashSet;
 
 public class VVisitor extends Visitor<RuntimeException> {
   HashMap<String, String> varRegMap;
+  Vector<varLiveness> liveList;
 
-  public VVisitor(HashMap<String, String> varRegMap) {
+  public VVisitor(HashMap<String, String> varRegMap, Vector<varLiveness> liveList) {
     this.varRegMap = varRegMap;
+    this.liveList = liveList;
   }
 
   public void visit(VAssign a) throws RuntimeException {
@@ -58,6 +61,9 @@ public class VVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VCall c) throws RuntimeException {
+
+
+    // The line of code that calls a function with arguments
     String code = new String();
     if(c.dest != null)
     {
@@ -116,6 +122,11 @@ public class VVisitor extends Visitor<RuntimeException> {
     else {
       System.out.println("$v0 = " + r.value);
       System.out.println("ret"); //store return value in $v0
+    }
+  }
+
+  private LinkedHashSet<String> calcTRegBackup() {
+    for (varLiveness vl : liveList) {
     }
   }
 }

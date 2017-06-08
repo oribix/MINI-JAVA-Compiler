@@ -13,6 +13,7 @@ public class VaporTranslator{
   VaporProgram ast;
   Vector<varLiveness> active;
   HashMap<String, String> varRegMap;//(var name, register/stack loc)
+  Vector<varLiveness> liveList;
   Registers registers;
   int localStackCnt;
 
@@ -29,8 +30,8 @@ public class VaporTranslator{
     printDataSegments();
     for (VFunction function : ast.functions) {
       localStackCnt = 8;
-      Vector<varLiveness> liveList = calcLiveness(function);
-      linearScanRegisterAllocation(liveList);
+      liveList = calcLiveness(function);
+      linearScanRegisterAllocation();
       System.out.println("varRegMap: " + varRegMap.toString());
       printCode(function);
       registers = new Registers();// embraced the dark side
@@ -41,7 +42,7 @@ public class VaporTranslator{
   // Goes throught the list of intervals from a function
   // By end of this function, all variables should be appropriately 
   // mapped to either a register or a local stack position in varRegMap
-  void linearScanRegisterAllocation(Vector<varLiveness> liveList) {
+  void linearScanRegisterAllocation() {
     active = new Vector<>();
     for (varLiveness i : liveList) {
       expireOldIntervals(i);
@@ -98,7 +99,7 @@ public class VaporTranslator{
   }
 
   void printCode(VFunction function){
-    VVisitor visitor = new VVisitor(varRegMap);
+    VVisitor visitor = new VVisitor(varRegMap, liveList);
     // Print function headers
     System.out.println(getFunctionHeaders(function));
 
@@ -166,8 +167,8 @@ public class VaporTranslator{
     if (outSize <= 4)
       outSize = 0;
 
-    // Local size is the amount of S registers used + number of spilled intervals
-    localSize = registers.amountSUsed();
+    // Local size is the amount of S registers ever used + number of spilled intervals
+    localSize = registers.highestS;
     if (localStackCnt > 8)
       localSize = localStackCnt;
 
