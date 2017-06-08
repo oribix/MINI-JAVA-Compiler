@@ -43,7 +43,7 @@ public class Registers {
   }
   public String getFreeReg() {
     if (lowestT < 9 && !tUsed[lowestT]) {
-      String reg = "t" + lowestT;
+      String reg = "$t" + lowestT;
       int i = lowestT;
       tUsed[lowestT] = true;
 
@@ -58,7 +58,7 @@ public class Registers {
 
       return reg;
     } else if (lowestS < 8 && !sUsed[lowestS]) {
-      String reg = "s" + lowestS;
+      String reg = "$s" + lowestS;
       int i = lowestS;
       sUsed[lowestS] = true;
 
@@ -83,23 +83,17 @@ public class Registers {
 
   // Takes argument like "s0" or "t7"
   public void returnFreeReg(String reg) {
-    if (reg.length() != 2 || 
-        !Character.isAlphabetic(reg.charAt(0)) || 
-        !Character.isDigit(reg.charAt(1))) {
-      System.err.println("Error: Passed invalid string in Registers.returnFreeReg()");
-      System.exit(-1);
-    }
-
     // Second char is the reg number
-    int i = reg.charAt(1) - '0';
+    int regNum = reg.charAt(2) - '0';
 
     // First char is t or s
-    if (reg.charAt(0) == 't') {
-      tUsed[i] = false;
-      lowestT = Math.min(i, lowestT);
-    } else if (reg.charAt(0) == 's') {
-      sUsed[i] = false;
-      lowestS = Math.min(i, lowestS);
+    char regType = reg.charAt(1);
+    if (regType == 't') {
+      tUsed[regNum] = false;
+      lowestT = Math.min(regNum, lowestT);
+    } else if (regType == 's') {
+      sUsed[regNum] = false;
+      lowestS = Math.min(regNum, lowestS);
       checkHighS();
     } else {
       System.err.println("Error: bad character in Registers.returnFreeReg()");
