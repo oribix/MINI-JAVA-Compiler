@@ -149,20 +149,27 @@ public class VaporTranslator{
 
   String getFunctionHeaders(VFunction f)
   {
-    // Calculate in, out, and local (local NOT done yet)
+    // Calculate in, out, and local
     OutStackVisitor osv = new OutStackVisitor();
     int outSize = 0, inSize = 0, localSize = 0;
 
+    // In size is number of arguments (if greater than 4)
     if (f.params.length > 4) 
       inSize = f.params.length; // Size of in stack
     else
       inSize = 0;
 
+    // Out size is number of arguments of called function with most arguments (if > 4)
     for(VInstr inst : f.body) 
       outSize = Math.max(inst.accept(osv), outSize);  // Size of out stack
 
     if (outSize <= 4)
       outSize = 0;
+
+    // Local size is the amount of S registers used + number of spilled intervals
+    localSize = registers.amountSUsed();
+    if (localStackCnt > 8)
+      localSize = localStackCnt;
 
     // pass in different in, out, local values once we figure out how to calculate them
     return "func " + f.ident + printStackArrays(inSize, outSize, localSize);
