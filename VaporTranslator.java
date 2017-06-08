@@ -103,7 +103,7 @@ public class VaporTranslator{
   }
 
   void printCode(VFunction function){
-    VVisitor visitor = new VVisitor();
+    VVisitor visitor = new VVisitor(varRegMap);
     // Print function headers
     System.out.println(getFunctionHeaders(function));
 
@@ -119,7 +119,7 @@ public class VaporTranslator{
 
       //print instruction
       VInstr inst = body[j];
-      String TESTER = inst.accept(new String("test"), visitor);
+      inst.accept(visitor);
     }
 
     System.out.println();

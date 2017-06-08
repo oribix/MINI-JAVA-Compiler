@@ -7,23 +7,27 @@ import cs132.vapor.ast.VMemRead;
 import cs132.vapor.ast.VMemRef;
 import cs132.vapor.ast.VMemWrite;
 import cs132.vapor.ast.VReturn;
-import cs132.vapor.ast.VInstr.VisitorPR;
+import cs132.vapor.ast.VInstr.Visitor;
 import cs132.vapor.ast.VOperand;
 import cs132.vapor.ast.VMemRef;
 import cs132.vapor.ast.VVarRef;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.Objects;
 
-public class VVisitor extends
-  VisitorPR<String, String, RuntimeException> {
+public class VVisitor extends Visitor<RuntimeException> {
+  HashMap<String, String> varRegMap;
 
-  public String visit(String s, VAssign a) throws RuntimeException {
-    // FIXME: You can print a.dest, which contains the variable. For now, just print $t0.
-    System.out.println("$t0" + " = " + a.source);
-    return "VAssign";
+  public VVisitor(HashMap<String, String> varRegMap) {
+    this.varRegMap = varRegMap;
   }
 
-  public String visit(String s, VBranch b) throws RuntimeException {
+  public void visit(VAssign a) throws RuntimeException {
+    // FIXME: You can print a.dest, which contains the variable. For now, just print $t0.
+    System.out.println("$t0" + " = " + a.source);
+  }
+
+  public void visit(VBranch b) throws RuntimeException {
     String ifString = "";
     if(b.positive)
       ifString = "if";
@@ -31,11 +35,9 @@ public class VVisitor extends
       ifString = "if0";
 
     System.out.println(ifString + " " + b.value + " goto " + b.target);
-
-    return "VBranch";
   }
 
-  public String visit(String s, VBuiltIn c) throws RuntimeException {
+  public void visit(VBuiltIn c) throws RuntimeException {
     String code = new String();
     if(c.dest != null)
     {
@@ -53,10 +55,9 @@ public class VVisitor extends
     code += argz;
     code += ")";
     System.out.println(code);
-    return "VBuiltIn";
   }
 
-  public String visit(String s, VCall c) throws RuntimeException {
+  public void visit(VCall c) throws RuntimeException {
     String code = new String();
     if(c.dest != null)
     {
@@ -74,15 +75,13 @@ public class VVisitor extends
     code += argz;
     code += ")";
     System.out.println(code);
-    return "VCall";
   }
 
-  public String visit(String s, VGoto g) throws RuntimeException {
+  public void visit(VGoto g) throws RuntimeException {
     System.out.println("goto " + g.target);
-    return "VGoto";
   }
 
-  public String visit(String s, VMemRead r) throws RuntimeException {
+  public void visit(VMemRead r) throws RuntimeException {
     String base = ((VMemRef.Global)r.source).base.toString();
     int byteOffset = ((VMemRef.Global)r.source).byteOffset;
     if(base.equals("this") && byteOffset == 0)
@@ -93,11 +92,9 @@ public class VVisitor extends
     {
       System.out.println(r.dest + " = [" + base + " + " +  byteOffset + "]");
     }
-
-    return "VMemRead";
   }
 
-  public String visit(String s, VMemWrite w) throws RuntimeException {
+  public void visit(VMemWrite w) throws RuntimeException {
     String base = ((VMemRef.Global)w.dest).base.toString();
     int byteOffset = ((VMemRef.Global)w.dest).byteOffset;
 
@@ -110,10 +107,9 @@ public class VVisitor extends
     {
       System.out.println("[" + base + " + " + byteOffset + "] = " + src);
     }
-    return "VMemWrite";
   }
 
-  public String visit(String s, VReturn r) throws RuntimeException {
+  public void visit(VReturn r) throws RuntimeException {
     if(r.value == null) {
       System.out.println("ret");
     }
@@ -121,6 +117,5 @@ public class VVisitor extends
       System.out.println("$v0 = " + r.value);
       System.out.println("ret"); //store return value in $v0
     }
-    return "VReturn";
   }
 }
