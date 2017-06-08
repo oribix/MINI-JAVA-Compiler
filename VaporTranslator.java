@@ -35,7 +35,7 @@ public class VaporTranslator{
 
   // Goes throught the list of intervals from a function
   // By end of this function, all variables should be appropriately 
-  // mapped to either a register or a local stack position
+  // mapped to either a register or a local stack position in varRegMap
   void linearScanRegisterAllocation(Vector<varLiveness> liveList) {
     active = new Vector<>();
     for (varLiveness i : liveList) {
@@ -45,8 +45,8 @@ public class VaporTranslator{
       else {
         varRegMap.put(i.getName(), registers.getFreeReg());
         active.add(i);
+        sortByEndPoint(active); // Keep active sorted by end point
       }
-      sortByEndPoint(active); // Keep active sorted by end point
     }
   }
 
