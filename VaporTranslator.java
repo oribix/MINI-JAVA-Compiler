@@ -28,12 +28,15 @@ public class VaporTranslator{
   // METHODS
   void translate(){
     printDataSegments();
+    int s = 0;
     for (VFunction function : ast.functions) {
       localStackCnt = 8;
       liveList = calcLiveness(function);
       linearScanRegisterAllocation();
+      s = registers.highestS; 
+      System.out.println(s + "...");
       System.out.println("varRegMap: " + varRegMap.toString());
-      printCode(function);
+      printCode(function, s);
       registers = new Registers();// embraced the dark side
       varRegMap.clear();
     }
@@ -98,11 +101,16 @@ public class VaporTranslator{
     return liveVisitor.getLiveList();
   }
 
-  void printCode(VFunction function){
+  void printCode(VFunction function, int s){
     VVisitor visitor = new VVisitor(varRegMap, liveList);
+    System.out.println(varRegMap.size());
     // Print function headers
     System.out.println(getFunctionHeaders(function));
-
+    // Store s values into local
+    for(int i = 0; i < s; i++)
+    {
+      System.out.println("local[" + i + "] = $s" + i);
+    }
     VInstr[] body = function.body;
     VCodeLabel[] labels = function.labels;
     int currLabel = 0;
@@ -117,7 +125,11 @@ public class VaporTranslator{
       VInstr inst = body[j];
       inst.accept(visitor);
     }
-
+    for(int i = 0; i < s; i++)
+    {
+      System.out.print("$s" + i + " = local[" + i + ']');
+    }
+    System.out.println("ret"); //store return value in $v0
     System.out.println();
     return;
   }
