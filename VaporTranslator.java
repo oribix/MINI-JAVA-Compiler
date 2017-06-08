@@ -20,6 +20,7 @@ public class VaporTranslator{
   public VaporTranslator(VaporProgram inAST){
     ast = inAST;
     registers = new Registers();
+    varRegMap = new HashMap<>();
     localStackCnt = 0;
   }
 
@@ -29,7 +30,11 @@ public class VaporTranslator{
     for (VFunction function : ast.functions) {
       localStackCnt = 8;
       Vector<varLiveness> liveList = calcLiveness(function);
+      linearScanRegisterAllocation(liveList);
+      System.out.println(varRegMap.toString());
       printCode(function);
+      registers = new Registers();// embraced the dark side
+      varRegMap.clear();
     }
   }
 
@@ -92,7 +97,7 @@ public class VaporTranslator{
     System.out.println();
     liveVisitor.removeRedundant(function.vars, function.params);
     liveVisitor.printLiveness(); //remove eventually
-    liveVisitor.resetLineNum();
+    //liveVisitor.resetLineNum();
     System.out.println();
     return liveVisitor.getLiveList();
   }
