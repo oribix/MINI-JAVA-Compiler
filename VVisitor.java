@@ -110,12 +110,8 @@ public class VVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VReturn r) throws RuntimeException {
-    if(r.value == null) {
-      System.out.println("ret");
-    }
-    else {
-      System.out.println("$v0 = " + r.value);
-      System.out.println("ret"); //store return value in $v0
+    if(r.value != null) {
+      System.out.println("$v0 = $" + varRegMap.get(r.value.toString()));
     }
   }
 }

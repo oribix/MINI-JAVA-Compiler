@@ -5,6 +5,7 @@ public class Registers {
 
   private boolean[] tUsed, sUsed;
   private int lowestT, lowestS; // tracks lowest free index for t and s
+  public int highestS;
 
   public Registers() {
     tUsed = new boolean[9]; // default: initialized to false
@@ -12,10 +13,34 @@ public class Registers {
 
     lowestT = 0;
     lowestS = 0;
+    highestS = 0;
   }
 
   // Returns string like "s1" or "t5". Uses lowestT/S as an optimization to avoid
   // searching the boolean array for free reg.
+  public int amountTUsed()
+  {
+    int count = 0;
+    for(int i = 0; i < 9; i++) {
+      if(tUsed[i])
+        count++;
+    }
+    return count;
+  }
+  public int amountSUsed()
+  {
+    int count = 0;
+    for(int i = 0; i < 8; i++) {
+      if(sUsed[i])
+        count++;
+    }
+    return count;
+  }
+  public void checkHighS()
+  {
+    if(highestS < lowestS)
+      highestS = lowestS;
+  }
   public String getFreeReg() {
     if (lowestT < 9 && !tUsed[lowestT]) {
       String reg = "t" + lowestT;
@@ -40,11 +65,15 @@ public class Registers {
       for (; i < 8; i++) {
         if (!sUsed[i]) {
           lowestS = i;
+          checkHighS();
           break;
         }
       }
       if (i == 8)
+      {
         lowestS = 8;
+        checkHighS();
+      }
 
       return reg;
     } else {
@@ -71,6 +100,7 @@ public class Registers {
     } else if (reg.charAt(0) == 's') {
       sUsed[i] = false;
       lowestS = Math.min(i, lowestS);
+      checkHighS();
     } else {
       System.err.println("Error: bad character in Registers.returnFreeReg()");
       System.exit(-1);
