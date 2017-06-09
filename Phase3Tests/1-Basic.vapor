@@ -1,5 +1,50 @@
+const vmt_test
+  :test.Start
+
 func Main()
 	x = 4
 	y = Add(x 2)
 	PrintIntS(y)
+	x = call test.Start(x x x x x)
 	ret
+
+func test.Start(this one two three four)
+  a = 1
+  b = 1
+  c = 1
+  d = 1
+  e = 1
+  f = 1
+  g = 1
+  h = 1
+  i = 1
+  j = 1
+  k = 1
+  l = 1
+  m = 1
+  n = 1
+  o = 1
+  p = 1
+  q = 1
+  r = 1
+  r = Add(a b)
+
+  a = 1
+  b = 1
+  c = 1
+  d = 1
+  e = 1
+  f = 1
+  g = 1
+  h = 1
+  i = 1
+  j = 1
+  k = 1
+  l = 1
+  m = 1
+  n = 1
+  o = 1
+  p = 1
+  q = 1
+  r = 1
+  ret 1

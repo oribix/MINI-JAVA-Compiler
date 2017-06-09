@@ -21,26 +21,39 @@ public class VaporTranslator{
   HashMap<String, String> varRegMap;//(var name, register/stack loc)
   Vector<varLiveness> liveList;
   Registers registers;
-  int localStackCnt;
+  Vector<String> localStack;
+
+  // Stack sizes for function header
+  int inStackSize;
+  int outStackSize;
+  int localStackSize;
+
+  // Index where t regs and spill vars start in local register
+  int localT; 
+  int localSpill;
 
   // CONSTRUCTORS
   public VaporTranslator(VaporProgram inAST){
     ast = inAST;
     registers = new Registers();
     varRegMap = new HashMap<>();
-    localStackCnt = 0;
+    localStack = new Vector<>();
+    localT = 0;
   }
 
   // METHODS
   void translate(){
     printDataSegments();
     int s = 0;
+
+    // Output vapor-m code for each vapor function:
     for (VFunction function : ast.functions) {
-      localStackCnt = 8;
-      liveList = calcLiveness(function);
-      linearScanRegisterAllocation();
+      liveList = calcLiveness(function);  // calculate liveness of vars
+      linearScanRegisterAllocation();     // assign registers
       s = registers.highestS; 
       System.out.println("varRegMap: " + varRegMap.toString());
+      calcStackSizes(function);           // calculate size of in, out, and local stacks
+      assignLocalStackLocations();        // takes variables in local stack and maps them to "local[#]"
       printCode(function, s);
       registers.clear();
       varRegMap.clear();
@@ -78,12 +91,14 @@ public class VaporTranslator{
     varLiveness spill = active.last();
     if (spill.getEnd() > i.getEnd()){
       varRegMap.put(i.getName(), varRegMap.get(spill.getName()));
-      varRegMap.put(spill.getName(), "local[" + localStackCnt++ + "]");
+      varRegMap.put(i.getName(), "LOCAL TEMP");
+      localStack.add(spill.getName());
       active.remove(spill);
       active.add(i);
     }
     else{
-      varRegMap.put(i.getName(), "local[" + localStackCnt++ + "]");
+      varRegMap.put(i.getName(), "LOCAL TEMP");
+      localStack.add(i.getName());
     }
     return;
   }
@@ -96,7 +111,7 @@ public class VaporTranslator{
     for(int j = 0; j < body.length; j++) {
       //print instruction
       VInstr inst = body[j];
-      String TEST2 = inst.accept(new String("test"), liveVisitor);
+      inst.accept(liveVisitor);
     }
     liveVisitor.removeRedundant(function.vars, function.params);
     return liveVisitor.getLiveList();
@@ -105,18 +120,20 @@ public class VaporTranslator{
   void printCode(VFunction function, int s){
     VVisitor visitor = new VVisitor(varRegMap, liveList);
     //System.out.println(varRegMap.size());
-    // Print function headers
-    System.out.println(getFunctionHeaders(function));
+    printFunctionHeaders(function.ident); // Print function headers
+
     // Store s values into local
     for(int i = 0; i < s; i++)
     {
       System.out.println("local[" + i + "] = $s" + i);
     }
-    // Map and store param values to $a registers
 
+    // Map and store param values to $a registers
+    // print body of function
     VInstr[] body = function.body;
     VCodeLabel[] labels = function.labels;
     int currLabel = 0;
+
     //j is the line number
     for(int j = 0; j < body.length; j++) {
       //print label if there is one
@@ -149,10 +166,13 @@ public class VaporTranslator{
       else
         inst.accept(visitor);
     }
+
+    // Restore local values into s
     for(int i = 0; i < s; i++)
     {
       System.out.print("$s" + i + " = local[" + i + ']');
     }
+
     System.out.println("ret"); //store return value in $v0
     System.out.println();
     return;
@@ -172,29 +192,42 @@ public class VaporTranslator{
     }
   }
 
-  String getFunctionHeaders(VFunction f)
-  {
+  void calcStackSizes(VFunction f) {
     // Calculate in, out, and local
-    OutStackVisitor osv = new OutStackVisitor();
-    int outSize = 0, inSize = 0, localSize = 0;
+    StackInfoVisitor osv = new StackInfoVisitor();
 
     // In size is number of arguments (if greater than 4)
-    inSize = f.params.length > 4 ? f.params.length : 0;
+    inStackSize = f.params.length > 4 ? f.params.length : 0;
 
     // Out size is number of arguments of called function with most arguments (if > 4)
     for(VInstr inst : f.body) 
-      outSize = Math.max(inst.accept(osv), outSize);  // Size of out stack
+      outStackSize = Math.max(inst.accept(osv), outStackSize);  // StackSize of out stack
 
-    if (outSize <= 4)
-      outSize = 0;
+    if (outStackSize <= 4)
+      outStackSize = 0;
 
-    // Local size is the amount of S registers ever used + number of spilled intervals
-    localSize = registers.highestS;
-    if (localStackCnt > 8)
-      localSize = localStackCnt;
+    // Local size is the amount of S regs, amount of T regs, and amount of spills
+    localStackSize = registers.highestS + registers.highestT + localStack.size();
+    localT = registers.highestS;
+    localSpill = registers.highestS + registers.highestT;
 
+    // But...if no functions ever get called, then we don't back them up in local
+    if (osv.getVCallIndices().isEmpty()) {
+      localStackSize -= registers.highestT;
+      localSpill = registers.highestS;
+    }
+  }
+
+  void assignLocalStackLocations() {
+    int i = localSpill;
+    for (String var : localStack)
+      System.out.println("local[" + (i) + "]");
+  }
+
+  void printFunctionHeaders(String ident)
+  {
     // pass in different in, out, local values once we figure out how to calculate them
-    return "func " + f.ident + printStackArrays(inSize, outSize, localSize);
+    System.out.println("func " + ident + printStackArrays(inStackSize, outStackSize, localStackSize));
   }
 
   String printStackArrays(int in, int out, int local)
