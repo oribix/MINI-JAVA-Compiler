@@ -197,7 +197,7 @@ public class VaporTranslator{
     StackInfoVisitor osv = new StackInfoVisitor();
 
     // In size is number of arguments (if greater than 4)
-    inStackSize = f.params.length > 4 ? f.params.length : 0;
+    inStackSize = f.params.length;
 
     // Out size is number of arguments of called function with most arguments (if > 4)
     for(VInstr inst : f.body) 
