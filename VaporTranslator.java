@@ -1,3 +1,4 @@
+//project imports
 import cs132.vapor.ast.VaporProgram;
 import cs132.vapor.ast.VDataSegment;
 import cs132.vapor.ast.VOperand.Static;
@@ -5,8 +6,11 @@ import cs132.vapor.ast.VInstr;
 import cs132.vapor.ast.VFunction;
 import cs132.vapor.ast.VCodeLabel;
 import cs132.vapor.ast.VVarRef;
+
+//java library imports
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.Collections;
 
 public class VaporTranslator{
   // FIELDS
@@ -54,7 +58,8 @@ public class VaporTranslator{
       else {
         varRegMap.put(i.getName(), registers.getFreeReg());
         active.add(i);
-        sortByEndPoint(active); // Keep active sorted by end point
+        //sortByEndPoint(active); // Keep active sorted by end point
+        Collections.sort(active);
       }
     }
   }
@@ -77,7 +82,8 @@ public class VaporTranslator{
       varRegMap.put(spill.getName(), "local[" + localStackCnt++ + "]");
       active.remove(spill);
       active.add(i);
-      sortByEndPoint(active);
+      //sortByEndPoint(active);
+      Collections.sort(active);
 
     }
     else{
