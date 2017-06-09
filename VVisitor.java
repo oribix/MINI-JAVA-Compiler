@@ -98,7 +98,6 @@ public class VVisitor extends Visitor<RuntimeException> {
       }
     }
     System.out.println("call "+ getReg(c.dest));
-    System.out.println(getReg(c.dest) + " = " + "$v0");
   }
 
   public void visit(VGoto g) throws RuntimeException {

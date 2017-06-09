@@ -142,7 +142,7 @@ public class VaporTranslator{
       VInstr inst = body[j];
       
       //If instruction is vCall, back up and restore $a registers into in stack
-      if (inst instanceof VCall || inst instanceof VBuiltIn) {
+      if (inst instanceof VCall) {
         int aRegCnt = 0;
         for(VVarRef.Local param : function.params)
         {
@@ -159,6 +159,7 @@ public class VaporTranslator{
           String regName = "$a" + aRegCnt;
           System.out.println(regName + " = " + stackName);
         }
+        System.out.println(visitor.getReg(((VCall)inst).dest) + " = " + "$v0");
       }
       else
         inst.accept(visitor);
