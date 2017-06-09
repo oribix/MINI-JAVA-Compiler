@@ -10,12 +10,12 @@ import cs132.vapor.ast.VVarRef;
 //java library imports
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.TreeSet;
 import java.util.Collections;
 
 public class VaporTranslator{
   // FIELDS
   VaporProgram ast;
-  Vector<varLiveness> active;
   HashMap<String, String> varRegMap;//(var name, register/stack loc)
   Vector<varLiveness> liveList;
   Registers registers;
@@ -41,7 +41,7 @@ public class VaporTranslator{
       System.out.println(s + "...");
       System.out.println("varRegMap: " + varRegMap.toString());
       printCode(function, s);
-      registers = new Registers();// embraced the dark side
+      registers.clear();
       varRegMap.clear();
     }
   }
@@ -50,41 +50,36 @@ public class VaporTranslator{
   // By end of this function, all variables should be appropriately 
   // mapped to either a register or a local stack position in varRegMap
   void linearScanRegisterAllocation() {
-    active = new Vector<>();
+    TreeSet<varLiveness> active = new TreeSet<>();
     for (varLiveness i : liveList) {
-      expireOldIntervals(i);
+      expireOldIntervals(active, i);
       if (active.size() == Registers.R)
-        spillAtInterval(i);
+        spillAtInterval(active, i);
       else {
         varRegMap.put(i.getName(), registers.getFreeReg());
         active.add(i);
-        //sortByEndPoint(active); // Keep active sorted by end point
-        Collections.sort(active);
       }
     }
   }
 
-  void expireOldIntervals(varLiveness i)
+  void expireOldIntervals(TreeSet<varLiveness> active, varLiveness i)
   {
-    for(int j = 0; j < active.size(); j++) {
-      if(active.get(j).getEnd() >= i.getStart())
+    TreeSet<varLiveness> newActive = new TreeSet<>(active);
+    for(varLiveness j : newActive) {
+      if(j.getEnd() >= i.getStart())
         return;
-      varLiveness reg = active.remove(j);
-      --j;
-      registers.returnFreeReg(varRegMap.get(reg.getName()));
+      active.remove(j);
+      registers.returnFreeReg(varRegMap.get(j.getName()));
     }
   }
 
-  void spillAtInterval(varLiveness i){
-    varLiveness spill = active.lastElement();
+  void spillAtInterval(TreeSet<varLiveness> active, varLiveness i){
+    varLiveness spill = active.last();
     if (spill.getEnd() > i.getEnd()){
       varRegMap.put(i.getName(), varRegMap.get(spill.getName()));
       varRegMap.put(spill.getName(), "local[" + localStackCnt++ + "]");
       active.remove(spill);
       active.add(i);
-      //sortByEndPoint(active);
-      Collections.sort(active);
-
     }
     else{
       varRegMap.put(i.getName(), "local[" + localStackCnt++ + "]");
@@ -160,10 +155,7 @@ public class VaporTranslator{
     int outSize = 0, inSize = 0, localSize = 0;
 
     // In size is number of arguments (if greater than 4)
-    if (f.params.length > 4) 
-      inSize = f.params.length; // Size of in stack
-    else
-      inSize = 0;
+    inSize = f.params.length > 4 ? f.params.length : 0;
 
     // Out size is number of arguments of called function with most arguments (if > 4)
     for(VInstr inst : f.body) 
