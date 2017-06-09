@@ -28,8 +28,8 @@ public class varLiveness implements Comparable<varLiveness>{
 
   //compares by end time
   public int compareTo(varLiveness v){
-    if(v.end == this.end) return 0;
-    else if(v.end < this.end) return -1;
+    if(this.end == v.end) return 0;
+    else if(this.end < v.end) return -1;
     else return 1;
   }
 }

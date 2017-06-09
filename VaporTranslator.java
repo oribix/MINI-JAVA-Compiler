@@ -102,7 +102,6 @@ public class VaporTranslator{
       VInstr inst = body[j];
       String TEST2 = inst.accept(new String("test"), liveVisitor);
     }
-
     liveVisitor.removeRedundant(function.vars, function.params);
     return liveVisitor.getLiveList();
   }
@@ -139,19 +138,7 @@ public class VaporTranslator{
     System.out.println();
     return;
   }
-  public void sortByEndPoint(Vector<varLiveness> lList ) // insertion sort because im lazy
-  {
-    varLiveness temp;
-    for (int i = 1; i < lList.size(); i++) {
-      for(int j = i ; j > 0 ; j--){
-        if(lList.get(j).end < lList.get(j-1).end){
-          temp = lList.get(j);
-          lList.set(j, lList.get(j-1));
-          lList.set(j-1, temp);
-        }
-      }
-    }
-  }
+
   void printDataSegments()
   {
     for(VDataSegment VDS : ast.dataSegments)
