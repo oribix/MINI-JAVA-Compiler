@@ -108,6 +108,8 @@ public class LivenessVisitor extends
   public String visit(String s, VAssign a) throws RuntimeException {
     varLiveness live = new varLiveness(a.source.toString(), lineNum);
     addLiveness(live);
+    live = new varLiveness(a.dest.toString(), lineNum);
+    addLiveness(live);
     ++lineNum;
     return "VAssign";
   }

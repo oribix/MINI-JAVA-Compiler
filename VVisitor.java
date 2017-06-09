@@ -51,20 +51,30 @@ public class VVisitor extends Visitor<RuntimeException> {
       if(aRegCnt < 4) { // If an $a register is available
         String regName = "$a" + aRegCnt;
         //paramRegMap.put(param.toString(), regName);
-        System.out.println(regName + " = " + getReg(arg.toString()));
+        //System.out.println(regName + " = " + getReg(arg.toString()));
         ++aRegCnt;
       }
       else {
         // If an $a register is not available, spill to out stack
         String regName = "out[" + aRegCnt + ']';
         //paramRegMap.put(param.toString(), regName); 
-        System.out.println(regName + " = " + getReg(arg.toString()));
+        //System.out.println(regName + " = " + getReg(arg.toString()));
         ++aRegCnt;
       }
     }
-    //String registerN = getReg(c.dest);
-    //System.out.println(c.op.name + ' ' + getReg(c.dest.toString()));
-    //System.out.println(getReg(c.dest) + " = " + "$v0");
+    String Out = new String();
+    if(c.dest != null) {
+      Out += getReg(c.dest) + " = ";
+    }
+    Out += c.op.name + '(';
+    aRegCnt = 0;
+    for(VOperand arg : c.args) {
+              Out += getReg(arg.toString()) + ' ';
+
+    }
+    Out = Out.substring(0, Out.length() -1);
+    Out += ')';
+    System.out.println(Out);
   }
 
   public void visit(VCall c) throws RuntimeException {
