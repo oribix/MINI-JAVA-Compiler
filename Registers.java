@@ -100,4 +100,16 @@ public class Registers {
       System.exit(-1);
     }
   }
+
+  public void clear(){
+    for(int i = 0; i < tUsed.length; i++)
+      tUsed[i] = false;
+
+    for(int i = 0; i < sUsed.length; i++)
+      sUsed[i] = false;
+
+    lowestT = 0;
+    lowestS = 0;
+    highestS = 0;
+  }
 }

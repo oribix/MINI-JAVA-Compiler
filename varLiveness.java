@@ -1,4 +1,4 @@
-public class varLiveness{
+public class varLiveness implements Comparable<varLiveness>{
   String name;
   int start;
   int end;
@@ -13,14 +13,23 @@ public class varLiveness{
     if(e > end)
       end = e;
   }
+
   public String getName(){
     return name;
   }
+
   public int getStart(){
     return start;
   }
+
   public int getEnd(){
     return end;
   }
-  
+
+  //compares by end time
+  public int compareTo(varLiveness v){
+    if(this.end == v.end) return 0;
+    else if(this.end < v.end) return -1;
+    else return 1;
+  }
 }
