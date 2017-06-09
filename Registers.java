@@ -5,7 +5,7 @@ public class Registers {
 
   private boolean[] tUsed, sUsed;
   private int lowestT, lowestS; // tracks lowest free index for t and s
-  public int highestS;
+  public int highestT, highestS;
 
   public Registers() {
     tUsed = new boolean[9]; // default: initialized to false
@@ -13,34 +13,23 @@ public class Registers {
 
     lowestT = 0;
     lowestS = 0;
+    highestT = 0;
     highestS = 0;
   }
 
-  // Returns string like "s1" or "t5". Uses lowestT/S as an optimization to avoid
-  // searching the boolean array for free reg.
-  public int amountTUsed()
+  public void updateHighestT()
   {
-    int count = 0;
-    for(int i = 0; i < 9; i++) {
-      if(tUsed[i])
-        count++;
-    }
-    return count;
+    if(highestT < lowestT)
+      highestT = lowestT;
   }
-  public int amountSUsed()
-  {
-    int count = 0;
-    for(int i = 0; i < 8; i++) {
-      if(sUsed[i])
-        count++;
-    }
-    return count;
-  }
-  public void checkHighS()
+  public void updateHighestS()
   {
     if(highestS < lowestS)
       highestS = lowestS;
   }
+
+  // Returns string like "$s1" or "$t5". Uses lowestT/S as an optimization to avoid
+  // searching the boolean array for free reg.
   public String getFreeReg() {
     if (lowestT < 9 && !tUsed[lowestT]) {
       String reg = "$t" + lowestT;
@@ -53,9 +42,11 @@ public class Registers {
           break;
         }
       }
-      if (i == 9)
+
+      if (i == 9) 
         lowestT = 9;
 
+      updateHighestT();
       return reg;
     } else if (lowestS < 8 && !sUsed[lowestS]) {
       String reg = "$s" + lowestS;
@@ -65,16 +56,13 @@ public class Registers {
       for (; i < 8; i++) {
         if (!sUsed[i]) {
           lowestS = i;
-          checkHighS();
           break;
         }
       }
       if (i == 8)
-      {
         lowestS = 8;
-        checkHighS();
-      }
 
+      updateHighestS();
       return reg;
     } else {
       return null;
@@ -94,7 +82,6 @@ public class Registers {
     } else if (regType == 's') {
       sUsed[regNum] = false;
       lowestS = Math.min(regNum, lowestS);
-      checkHighS();
     } else {
       System.err.println("Error: bad character in Registers.returnFreeReg()");
       System.exit(-1);
