@@ -170,7 +170,7 @@ public class VaporTranslator{
     // Restore local values into s
     for(int i = 0; i < s; i++)
     {
-      System.out.print("$s" + i + " = local[" + i + ']');
+      System.out.println("$s" + i + " = local[" + i + ']');
     }
 
     System.out.println("ret"); //store return value in $v0
@@ -221,7 +221,7 @@ public class VaporTranslator{
   void assignLocalStackLocations() {
     int i = localSpill;
     for (String var : localStack)
-      System.out.println("local[" + (i) + "]");
+      varRegMap.put(var, "local[" + (i++) + "]");
   }
 
   void printFunctionHeaders(String ident)
