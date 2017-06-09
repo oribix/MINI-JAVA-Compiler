@@ -53,8 +53,12 @@ public class LivenessVisitor extends
       int end = liveList.get(i).getEnd();
       if(start == end)
       {
-        liveList.remove(i);
-        --i;
+        // leave "this" in varRegMap
+        if(!Objects.equals(liveList.get(i).getName(), "this"))
+        {
+          liveList.remove(i);
+          --i;
+        }
       }
     }
     for(int i = 0; i < liveList.size(); i++)
@@ -75,8 +79,12 @@ public class LivenessVisitor extends
       String name = liveList.get(i).getName();
       for(VVarRef.Local pName : paramNames){
         if( Objects.equals(name, new String(pName.ident)) ) {
-          liveList.remove(i);
-          --i;
+          // leave "this" in varRegMap
+          if(!Objects.equals(liveList.get(i).getName(), "this"))
+          {
+            liveList.remove(i);
+            --i;
+          }
         }
       }
     }

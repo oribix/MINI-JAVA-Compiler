@@ -5,6 +5,8 @@ import cs132.vapor.ast.VInstr;
 import cs132.vapor.ast.VFunction;
 import cs132.vapor.ast.VCodeLabel;
 import cs132.vapor.ast.VVarRef;
+import cs132.vapor.ast.VCall;
+import cs132.vapor.ast.VBuiltIn;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -34,7 +36,6 @@ public class VaporTranslator{
       liveList = calcLiveness(function);
       linearScanRegisterAllocation();
       s = registers.highestS; 
-      System.out.println(s + "...");
       System.out.println("varRegMap: " + varRegMap.toString());
       printCode(function, s);
       registers = new Registers();// embraced the dark side
@@ -103,7 +104,7 @@ public class VaporTranslator{
 
   void printCode(VFunction function, int s){
     VVisitor visitor = new VVisitor(varRegMap, liveList);
-    System.out.println(varRegMap.size());
+    //System.out.println(varRegMap.size());
     // Print function headers
     System.out.println(getFunctionHeaders(function));
     // Store s values into local
@@ -111,6 +112,8 @@ public class VaporTranslator{
     {
       System.out.println("local[" + i + "] = $s" + i);
     }
+    // Map and store param values to $a registers
+
     VInstr[] body = function.body;
     VCodeLabel[] labels = function.labels;
     int currLabel = 0;
@@ -123,7 +126,28 @@ public class VaporTranslator{
 
       //print instruction
       VInstr inst = body[j];
-      inst.accept(visitor);
+      
+      //If instruction is vCall, back up and restore $a registers into in stack
+      if (inst instanceof VCall || inst instanceof VBuiltIn) {
+        int aRegCnt = 0;
+        for(VVarRef.Local param : function.params)
+        {
+          String stackName = "in[" + aRegCnt + ']';
+          String regName = "$a" + aRegCnt;
+          System.out.println(stackName + " = " + regName);
+          ++aRegCnt;
+        }
+        inst.accept(visitor);
+        --aRegCnt;
+        for(; aRegCnt >= 0; --aRegCnt)
+        {
+          String stackName = "in[" + aRegCnt + ']';
+          String regName = "$a" + aRegCnt;
+          System.out.println(regName + " = " + stackName);
+        }
+      }
+      else
+        inst.accept(visitor);
     }
     for(int i = 0; i < s; i++)
     {

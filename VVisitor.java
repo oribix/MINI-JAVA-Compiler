@@ -46,46 +46,49 @@ public class VVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VBuiltIn c) throws RuntimeException {
-    String code = new String();
-    if(c.dest != null)
-    {
-      code = getReg(c.dest) + " = " + c.op.name + "(";
-    }
-    else
-    {
-      code = c.op.name + "(";
-    }
-    String argz = new String();
+    int aRegCnt = 0;
     for(VOperand arg : c.args) {
-      argz = argz + " " + getReg(arg);
+      if(aRegCnt < 4) { // If an $a register is available
+        String regName = "$a" + aRegCnt;
+        //paramRegMap.put(param.toString(), regName);
+        System.out.println(regName + " = " + getReg(arg.toString()));
+        ++aRegCnt;
+      }
+      else {
+        // If an $a register is not available, spill to out stack
+        String regName = "out[" + aRegCnt + ']';
+        //paramRegMap.put(param.toString(), regName); 
+        System.out.println(regName + " = " + getReg(arg.toString()));
+        ++aRegCnt;
+      }
     }
-    argz = argz.substring(1);
-    code += argz;
-    code += ")";
-    System.out.println(code);
+    //String registerN = getReg(c.dest);
+    //System.out.println(c.op.name + ' ' + getReg(c.dest.toString()));
+    //System.out.println(getReg(c.dest) + " = " + "$v0");
   }
 
   public void visit(VCall c) throws RuntimeException {
 
 
     // The line of code that calls a function with arguments
-    String code = new String();
-    if(c.dest != null)
-    {
-      code = getReg(c.dest) + " = call " + getReg(c.addr) + "(";
-    }
-    else
-    {
-      code = getReg(c.addr) + "(";
-    }
-    String argz = new String();
+    int aRegCnt = 0;
     for(VOperand arg : c.args) {
-      argz = argz + " " + getReg(arg);
+      if(aRegCnt < 4) { // If an $a register is available
+        String regName = "$a" + aRegCnt;
+        //paramRegMap.put(param.toString(), regName);
+        System.out.println(regName + " = " + getReg(arg.toString()));
+        ++aRegCnt;
+      }
+      else {
+        // If an $a register is not available, spill to out stack
+        String regName = "out[" + aRegCnt + ']';
+        //paramRegMap.put(param.toString(), regName); 
+        System.out.println(regName + " = " + getReg(arg.toString()));
+        ++aRegCnt;
+      }
     }
-    argz = argz.substring(1);
-    code += argz;
-    code += ")";
-    System.out.println(code);
+    System.out.println("call "+ getReg(c.dest));
+    System.out.println(getReg(c.dest) + " = " + "$v0");
   }
 
   public void visit(VGoto g) throws RuntimeException {
@@ -97,11 +100,17 @@ public class VVisitor extends Visitor<RuntimeException> {
     int byteOffset = ((VMemRef.Global)r.source).byteOffset;
     if(base.equals("this") && byteOffset == 0)
     {
-      System.out.println(getReg(r.dest) + " = [this]");
+      System.out.println(getReg(r.dest) + " = [" + getReg("this") + "]");
     }
     else
     {
-      System.out.println(getReg(r.dest) + " = [" + getReg(base) + " + " +  byteOffset + "]");
+      String Out = getReg(r.dest) + " = [" + getReg(base);
+      if(byteOffset != 0)
+      {
+        Out += " = [" + getReg(base) + " + " +  byteOffset;
+      }
+      Out += ']';
+      System.out.println(Out);
     }
   }
 
