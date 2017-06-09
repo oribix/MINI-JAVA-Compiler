@@ -44,51 +44,47 @@ public class LivenessVisitor extends
       liveList.add(var);
     }
   }
-  
+
   public void removeRedundant(String[] varNames,VVarRef.Local[] paramNames)
   {
-    for(int i = 0; i < liveList.size(); i++)
+    Vector<varLiveness> ll = new Vector<>(liveList);
+    for(varLiveness vl : ll)
     {
-      int start = liveList.get(i).getStart();
-      int end = liveList.get(i).getEnd();
-      if(start == end)
+      String name = vl.getName();
+      //removes variables that have the same start and end line
+      if(vl.getStart() == vl.getEnd())
       {
         // leave "this" in varRegMap
-        if(!Objects.equals(liveList.get(i).getName(), "this"))
-        {
-          liveList.remove(i);
-          --i;
+        if(!Objects.equals(name, "this")){
+          liveList.remove(vl);
+          continue;
         }
       }
-    }
-    for(int i = 0; i < liveList.size(); i++)
-    {
+
+      //removes redundadnt variable names
       boolean validName = false;
-      String name = liveList.get(i).getName();
       for(String vName : varNames){
-        if( Objects.equals(name, new String(vName)) )
+        if( Objects.equals(name, new String(vName)))
           validName = true;
       }
       if(!validName){
-        liveList.remove(i);
-        --i;
+        liveList.remove(vl);
+        continue;
       }
-    }
-    for(int i = 0; i < liveList.size(); i++)
-    {
-      String name = liveList.get(i).getName();
+
+      //removes redundant parameter names
       for(VVarRef.Local pName : paramNames){
         if( Objects.equals(name, new String(pName.ident)) ) {
           // leave "this" in varRegMap
-          if(!Objects.equals(liveList.get(i).getName(), "this"))
-          {
-            liveList.remove(i);
-            --i;
+          if(!Objects.equals(name, "this")){
+            liveList.remove(vl);
+            break;
           }
         }
       }
     }
   }
+
   public void printLiveness() //for testing
   {
     for(int i = 0; i < liveList.size(); i++)

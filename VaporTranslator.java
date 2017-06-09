@@ -92,10 +92,7 @@ public class VaporTranslator{
   Vector<varLiveness> calcLiveness(VFunction function){
     LivenessVisitor liveVisitor = new LivenessVisitor();
     VInstr[] body = function.body;
-    //j is the line number
-    for(int j = 0; j < body.length; j++) {
-      //print instruction
-      VInstr inst = body[j];
+    for(VInstr inst : body) {
       String TEST2 = inst.accept(new String("test"), liveVisitor);
     }
     liveVisitor.removeRedundant(function.vars, function.params);
