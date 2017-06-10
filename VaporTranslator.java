@@ -50,7 +50,6 @@ public class VaporTranslator{
       mapParamsToRegs(function);          // map arguments, if any, to $a# and in stack locations
       liveList = calcLiveness(function);  // calculate liveness of vars
       linearScanRegisterAllocation();     // assign registers
-      System.out.println("varRegMap: " + varRegMap.toString());
       calcStackSizes(function);           // calculate size of in, out, and local stacks
       assignLocalStackLocations();        // takes variables in local stack and maps them to "local[#]"
       printCode(function);
