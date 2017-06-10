@@ -51,21 +51,21 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
     {
       String name = vl.getName();
 
-      //removes variables that have the same start and end line
-      if(vl.getStart() == vl.getEnd())
-      {
-        // leave "this" in varRegMap
-        if(!Objects.equals(name, "this")){
-          liveList.remove(vl);
-          continue;
-        }
-      }
+      // Issue: var isn't assigned a register
+      ////removes variables that have the same start and end line
+      //if(vl.getStart() == vl.getEnd())
+      //{
+      //  System.out.println("One line: " + vl.getName());
+      //  liveList.remove(vl);
+      //  continue;
+      //}
 
       //removes "variables" that aren't in function variable list
       boolean validName = false;
       for(String vName : varNames)
-        if(name.equals(vName))
+        if(name.equals(vName)) {
           validName = true;
+        }
 
       if(!validName){
         liveList.remove(vl);
@@ -106,9 +106,9 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
 
   public void visit(VBranch b) throws RuntimeException {
     varLiveness live = new varLiveness(b.value.toString(), lineNum);
-    varLiveness live2 = new varLiveness(b.target.toString(), lineNum);
     addLiveness(live);
-    addLiveness(live2);
+    //varLiveness live2 = new varLiveness(b.target.toString(), lineNum);
+    //addLiveness(live2);
     ++lineNum;
   }
 
@@ -152,9 +152,8 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VGoto g) throws RuntimeException {
-     
-    varLiveness live = new varLiveness(g.target.toString(), lineNum);
-    addLiveness(live);
+    //varLiveness live = new varLiveness(g.target.toString(), lineNum);
+    //addLiveness(live);
     ++lineNum;
   }
 
