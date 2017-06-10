@@ -140,12 +140,12 @@ public class VaporTranslator{
     //j is the line number
     for(int j = 0; j < body.length; j++) {
       //print label if there is one
-      if(currLabel < labels.length && j+currLabel == labels[currLabel].instrIndex)
+      if(currLabel < labels.length && j == labels[currLabel].instrIndex)
         System.out.println(labels[currLabel++].ident + ":");
 
       //print instruction using VVisitor
       VInstr inst = body[j];
-      
+
       // If instruction is VCall, we need to back up values first
       // Can't really do in VVisitor because we need access to VFunction object
       if (inst instanceof VCall) {
