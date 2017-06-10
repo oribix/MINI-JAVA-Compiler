@@ -44,17 +44,16 @@ public class VaporTranslator{
   // METHODS
   void translate(){
     printDataSegments();
-    int s = 0;
 
     // Output vapor-m code for each vapor function:
     for (VFunction function : ast.functions) {
+      mapParamsToRegs(function);          // map arguments, if any, to $a# and in stack locations
       liveList = calcLiveness(function);  // calculate liveness of vars
       linearScanRegisterAllocation();     // assign registers
-      s = registers.highestS; 
       System.out.println("varRegMap: " + varRegMap.toString());
       calcStackSizes(function);           // calculate size of in, out, and local stacks
       assignLocalStackLocations();        // takes variables in local stack and maps them to "local[#]"
-      printCode(function, s);
+      printCode(function);
       registers.clear();
       varRegMap.clear();
     }
@@ -91,16 +90,26 @@ public class VaporTranslator{
     varLiveness spill = active.last();
     if (spill.getEnd() > i.getEnd()){
       varRegMap.put(i.getName(), varRegMap.get(spill.getName()));
-      varRegMap.put(i.getName(), "LOCAL TEMP");
+      varRegMap.put(spill.getName(), "LOCAL TEMP"); // Delete this after debugging
       localStack.add(spill.getName());
       active.remove(spill);
       active.add(i);
     }
     else{
-      varRegMap.put(i.getName(), "LOCAL TEMP");
+      varRegMap.put(i.getName(), "LOCAL TEMP"); // Delete this after debugging
       localStack.add(i.getName());
     }
     return;
+  }
+
+  void mapParamsToRegs(VFunction function) {
+    // Map and store param values to $a registers/in-stack locations
+    for(int i = 0; i < function.params.length; i++) {
+      if (i < 4)
+        varRegMap.put(function.params[i].toString(), "$a" + i);
+      else
+        varRegMap.put(function.params[i].toString(), "in[" + i + "]");
+    }
   }
 
   //Liveness Intervals
@@ -114,18 +123,15 @@ public class VaporTranslator{
     return liveVisitor.getLiveList();
   }
 
-  void printCode(VFunction function, int s){
+  void printCode(VFunction function){
     VVisitor visitor = new VVisitor(varRegMap, liveList);
-    //System.out.println(varRegMap.size());
-    printFunctionHeaders(function.ident); // Print function headers
+
+    printFunctionHeaders(function.ident);
 
     // Store s values into local
-    for(int i = 0; i < s; i++)
-    {
+    for(int i = 0; i < registers.highestS; i++)
       System.out.println("local[" + i + "] = $s" + i);
-    }
 
-    // Map and store param values to $a registers
     // print body of function
     VInstr[] body = function.body;
     VCodeLabel[] labels = function.labels;
@@ -134,24 +140,34 @@ public class VaporTranslator{
     //j is the line number
     for(int j = 0; j < body.length; j++) {
       //print label if there is one
-      if(currLabel < labels.length && j+currLabel == labels[currLabel].instrIndex){
+      if(currLabel < labels.length && j+currLabel == labels[currLabel].instrIndex)
         System.out.println(labels[currLabel++].ident + ":");
-      }
 
-      //print instruction
+      //print instruction using VVisitor
       VInstr inst = body[j];
       
-      //If instruction is vCall, back up and restore $a registers into in stack
+      // If instruction is VCall, we need to back up values first
+      // Can't really do in VVisitor because we need access to VFunction object
       if (inst instanceof VCall) {
+        // back up $a registers into in stack
         int aRegCnt = 0;
-        for(VVarRef.Local param : function.params)
-        {
-          String stackName = "in[" + aRegCnt + ']';
-          String regName = "$a" + aRegCnt;
-          System.out.println(stackName + " = " + regName);
-          ++aRegCnt;
-        }
+        int backupLength = (function.params.length <= 4) ? function.params.length : 4;
+        for(; aRegCnt < backupLength; aRegCnt++)
+          System.out.println("in[" + aRegCnt + "] = $a" + aRegCnt);
+
+        // back up t registers into local stack
+        final int endLocalT = localT + registers.highestT;
+        for (int i = localT; i < endLocalT; i++)
+          System.out.println("local[" + i + "] = $t" + (i - localT));
+
+        // assign values to a regs, call function
         inst.accept(visitor);
+
+        // The "restore t registers from local stack" section
+        for (int i = localT; i < endLocalT; i++)
+          System.out.println("$t" + (i - localT) + " = local[" + i + "]");
+
+        // The "restore a registers with values from in" section
         --aRegCnt;
         for(; aRegCnt >= 0; --aRegCnt)
         {
@@ -159,14 +175,16 @@ public class VaporTranslator{
           String regName = "$a" + aRegCnt;
           System.out.println(regName + " = " + stackName);
         }
-        System.out.println(visitor.getReg(((VCall)inst).dest) + " = " + "$v0");
+
+        // Put returned value into dest register
+        System.out.println(varRegMap.get(((VCall)inst).dest.toString()) + " = " + "$v0");
       }
       else
         inst.accept(visitor);
     }
 
     // Restore local values into s
-    for(int i = 0; i < s; i++)
+    for(int i = 0; i < registers.highestS; i++)
     {
       System.out.println("$s" + i + " = local[" + i + ']');
     }

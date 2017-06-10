@@ -25,7 +25,7 @@ public class VVisitor extends Visitor<RuntimeException> {
     this.liveList = liveList;
   }
 
-  String getReg(Object o){
+  private String getReg(Object o){
     String reg = varRegMap.get(o.toString());
     if(reg != null) return reg;
     else return o.toString();
@@ -78,23 +78,20 @@ public class VVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VCall c) throws RuntimeException {
-
-
     // The line of code that calls a function with arguments
-    int aRegCnt = 0;
-    for(VOperand arg : c.args) {
-      if(aRegCnt < 4) { // If an $a register is available
+    for(int aRegCnt = 0; aRegCnt < c.args.length; aRegCnt++) {
+      VOperand arg = c.args[aRegCnt];
+      if(aRegCnt < 4) { 
+        // If an $a register is available
         String regName = "$a" + aRegCnt;
         //paramRegMap.put(param.toString(), regName);
         System.out.println(regName + " = " + getReg(arg.toString()));
-        ++aRegCnt;
       }
       else {
         // If an $a register is not available, spill to out stack
         String regName = "out[" + aRegCnt + ']';
         //paramRegMap.put(param.toString(), regName); 
         System.out.println(regName + " = " + getReg(arg.toString()));
-        ++aRegCnt;
       }
     }
     System.out.println("call "+ getReg(c.dest));

@@ -44,12 +44,13 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
     }
   }
 
-  public void removeRedundant(String[] varNames,VVarRef.Local[] paramNames)
+  public void removeRedundant(String[] varNames, VVarRef.Local[] paramNames)
   {
     Vector<varLiveness> ll = new Vector<>(liveList);
     for(varLiveness vl : ll)
     {
       String name = vl.getName();
+
       //removes variables that have the same start and end line
       if(vl.getStart() == vl.getEnd())
       {
@@ -60,25 +61,25 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
         }
       }
 
-      //removes redundadnt variable names
+      //removes "variables" that aren't in function variable list
       boolean validName = false;
-      for(String vName : varNames){
-        if( Objects.equals(name, new String(vName)))
+      for(String vName : varNames)
+        if(name.equals(vName))
           validName = true;
-      }
+
       if(!validName){
         liveList.remove(vl);
         continue;
       }
 
-      //removes redundant parameter names
+      //removes parameters (they already have a registers)
       for(VVarRef.Local pName : paramNames){
-        if( Objects.equals(name, new String(pName.ident)) ) {
+        if(name.equals(pName.ident)) {
           // leave "this" in varRegMap
-          if(!Objects.equals(name, "this")){
+          //if(!name.equals("this")){
             liveList.remove(vl);
             break;
-          }
+          //}
         }
       }
     }

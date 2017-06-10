@@ -29,6 +29,9 @@ func test.Start(this one two three four)
   r = 1
   r = Add(a b)
 
+	b = call a(b b b b b)
+	b = call a(this one two three four)
+
   a = 1
   b = 1
   c = 1
