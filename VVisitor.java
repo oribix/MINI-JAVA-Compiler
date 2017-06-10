@@ -119,7 +119,7 @@ public class VVisitor extends Visitor<RuntimeException> {
       String Out = getReg(r.dest) + " = [" + getReg(base);
       if(byteOffset != 0)
       {
-        Out += " = [" + getReg(base) + " + " +  byteOffset;
+        Out += " + " +  byteOffset;
       }
       Out += ']';
       System.out.println(Out);
