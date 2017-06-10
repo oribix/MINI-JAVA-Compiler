@@ -1,7 +1,7 @@
 all: clean V2VM.class
 
-run:
-	./Phase1Tester/run ./Phase1Tester/SelfTestCases/ ./hw1.tgz
+run: hw3
+	./Phase3Tester/run ./Phase3Tester/SelfTestCases/ ./hw3.tgz
 
 hw1: clean
 	mkdir -p hw1/symboltable
@@ -21,6 +21,18 @@ hw2: clean
 	cp symboltable/* hw2/symboltable/
 	cp vaportools/* hw2/vaportools/
 	tar -czf hw2.tgz hw2/
+
+hw3: clean
+	mkdir -p hw3/
+	cp VVisitor.java hw3/
+	cp 	LivenessVisitor.java hw3/
+	cp 	Registers.java hw3/
+	cp 	StackInfoVisitor.java hw3/
+	cp 	V2VM.java hw3/
+	cp 	VaporTranslator.java hw3/
+	cp 	varLiveness.java hw3/
+	cp 	VVisitor.java hw3/
+	tar -czf hw3.tgz hw3/
 
 test: clean V2VM.class
 	java -cp "./:vapor-parser.jar" V2VM < Phase3Tests/Factorial.vapor
