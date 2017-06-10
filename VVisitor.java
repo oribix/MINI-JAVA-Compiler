@@ -100,7 +100,7 @@ public class VVisitor extends Visitor<RuntimeException> {
     }
 
     // The line of code that calls a function with arguments
-    System.out.println("call "+ getReg(c.dest));
+    System.out.println("call "+ getReg(c.addr));
   }
 
   public void visit(VGoto g) throws RuntimeException {
