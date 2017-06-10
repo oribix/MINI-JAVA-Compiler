@@ -125,6 +125,9 @@ public class VaporTranslator{
   }
 
   void printCode(VFunction function){
+    //for(VCodeLabel l : function.labels)
+    //  System.out.println(l.ident + ":" + l.instrIndex);
+
     VVisitor visitor = new VVisitor(varRegMap, liveList);
 
     printFunctionHeaders(function.ident);
@@ -140,8 +143,8 @@ public class VaporTranslator{
 
     //j is the line number
     for(int j = 0; j < body.length; j++) {
-      //print label if there is one
-      if(currLabel < labels.length && j == labels[currLabel].instrIndex)
+      //print one or more labels if label should be here
+      while(currLabel < labels.length && j == labels[currLabel].instrIndex)
         System.out.println(labels[currLabel++].ident + ":");
 
       //print instruction using VVisitor
