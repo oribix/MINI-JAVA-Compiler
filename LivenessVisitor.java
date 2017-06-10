@@ -75,11 +75,8 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
       //removes parameters (they already have a registers)
       for(VVarRef.Local pName : paramNames){
         if(name.equals(pName.ident)) {
-          // leave "this" in varRegMap
-          //if(!name.equals("this")){
-            liveList.remove(vl);
-            break;
-          //}
+          liveList.remove(vl);
+          break;
         }
       }
     }

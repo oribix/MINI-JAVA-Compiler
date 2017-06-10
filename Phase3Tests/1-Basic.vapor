@@ -30,7 +30,7 @@ func test.Start(this one two three four)
   r = Add(a b)
 
 	b = call a(b b b b b)
-	b = call a(this one two three four)
+	b = call a(one this two three four)
 
   a = 1
   b = 1

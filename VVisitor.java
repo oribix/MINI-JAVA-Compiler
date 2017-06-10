@@ -78,22 +78,28 @@ public class VVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VCall c) throws RuntimeException {
-    // The line of code that calls a function with arguments
+    // The code that puts arguments into a registers
     for(int aRegCnt = 0; aRegCnt < c.args.length; aRegCnt++) {
       VOperand arg = c.args[aRegCnt];
+
+      // Avoid using a registers on right hand side
+      String srcName = getReg(arg.toString());
+      if (srcName.contains("$a"))
+        srcName = "in[" + srcName.charAt(2) + "]";
+
       if(aRegCnt < 4) { 
         // If an $a register is available
         String regName = "$a" + aRegCnt;
-        //paramRegMap.put(param.toString(), regName);
-        System.out.println(regName + " = " + getReg(arg.toString()));
+        System.out.println(regName + " = " + srcName);
       }
       else {
         // If an $a register is not available, spill to out stack
         String regName = "out[" + aRegCnt + ']';
-        //paramRegMap.put(param.toString(), regName); 
-        System.out.println(regName + " = " + getReg(arg.toString()));
+        System.out.println(regName + " = " + srcName);
       }
     }
+
+    // The line of code that calls a function with arguments
     System.out.println("call "+ getReg(c.dest));
   }
 
