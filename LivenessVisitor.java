@@ -125,23 +125,11 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VBuiltIn c) throws RuntimeException {
-    if(c.op.name.equals("Error")) return;
-
-    if(c.op.name.equals("HeapAllocZ")){
-      //hackish way to make the liveness from beginning to end of function
-      addLiveness(new varLiveness(c.dest.toString(), lineNum));
-      addLiveness(new varLiveness(c.dest.toString(), function.body.length));
-      return;
-    }
-
     if(c.dest != null)
       addLiveness(new varLiveness(c.dest.toString(), lineNum));
-    //else
-    //  addLiveness(new varLiveness(c.op.name, lineNum));
 
-    for(VOperand arg : c.args) {
+    for(VOperand arg : c.args) 
       addLiveness(new varLiveness(arg.toString(), lineNum));
-    }
 
     ++lineNum;
   }

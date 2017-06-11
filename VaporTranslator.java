@@ -122,6 +122,8 @@ public class VaporTranslator{
     }
     liveVisitor.removeRedundant(function.vars, function.params);
     //liveVisitor.printLiveness();
+    //for (VCodeLabel cl : function.labels)
+    //  System.out.println(cl.ident + ": " + cl.instrIndex);
     return liveVisitor.getLiveList();
   }
 

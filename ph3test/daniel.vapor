@@ -2,6 +2,14 @@ const vmt_test
   :test.Start
 
 func Main()
+  ph3:
+  Error("Testing")
+  Error("Testing")
+  Error("Testing")
+  x = 4
+  ph3_1:
+  x = 2
+
 	x = 4
 	y = Add(x 2)
 	PrintIntS(y)
