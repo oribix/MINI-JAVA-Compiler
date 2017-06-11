@@ -2,6 +2,7 @@ import cs132.vapor.ast.VAssign;
 import cs132.vapor.ast.VBranch;
 import cs132.vapor.ast.VBuiltIn;
 import cs132.vapor.ast.VCall;
+import cs132.vapor.ast.VFunction;
 import cs132.vapor.ast.VGoto;
 import cs132.vapor.ast.VMemRead;
 import cs132.vapor.ast.VMemRef;
@@ -15,13 +16,20 @@ import java.util.Vector;
 import java.util.Objects;
 
 public class LivenessVisitor extends Visitor<RuntimeException> {
-  public int lineNum = 1;
-  Vector<varLiveness> liveList = new Vector<varLiveness>();
+  public int lineNum;
+  Vector<varLiveness> liveList;
+  VFunction function;
+
+  public LivenessVisitor(VFunction f){
+    lineNum = 1;
+    liveList = new Vector<>();
+    function = f;
+  }
 
   public Vector<varLiveness> getLiveList(){
     return liveList;
   }
-  
+
   public void resetLineNum()
   {
     lineNum = 1;
@@ -30,12 +38,13 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
 
   public void addLiveness(varLiveness var) {
     boolean found = false;
-    
+
     //update the end if the variable exist
     for(varLiveness vl : liveList) {
       if(vl.equals(var)) {
         found = true;
-        vl.updateEnd(lineNum);
+        //vl.updateEnd(lineNum);
+        vl.updateEnd(var.end);
       }
     }
 
@@ -63,10 +72,11 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
 
       //removes "variables" that aren't in function variable list
       boolean validName = false;
-      for(String vName : varNames)
+      for(String vName : varNames){
         if(name.equals(vName)) {
           validName = true;
         }
+      }
 
       if(!validName){
         liveList.remove(vl);
@@ -98,11 +108,10 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VAssign a) throws RuntimeException {
-    varLiveness live = new varLiveness(a.source.toString(), lineNum); // Src var
+    varLiveness live = new varLiveness(a.source.toString(), lineNum);
     addLiveness(live);
-    live = new varLiveness(a.dest.toString(), lineNum);               // Dst var
+    live = new varLiveness(a.dest.toString(), ++lineNum);
     addLiveness(live);
-    ++lineNum;
   }
 
   public void visit(VBranch b) throws RuntimeException {
@@ -114,41 +123,40 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VBuiltIn c) throws RuntimeException {
+    if(c.op.name.equals("Error")) return;
+
+    if(c.op.name.equals("HeapAllocZ")){
+      //hackish way to make the liveness from beginning to end of function
+      addLiveness(new varLiveness(c.dest.toString(), lineNum));
+      addLiveness(new varLiveness(c.dest.toString(), function.body.length));
+      return;
+    }
+
     if(c.dest != null)
-    {
-      varLiveness live1 = new varLiveness(c.dest.toString(), lineNum);
-      addLiveness(live1);
-    }
-    else
-    {
-      varLiveness live1 = new varLiveness(c.op.name, lineNum);
-      addLiveness(live1);
-    }
+      addLiveness(new varLiveness(c.dest.toString(), lineNum + 1));
+    //else
+    //  addLiveness(new varLiveness(c.op.name, lineNum));
+
     for(VOperand arg : c.args) {
-      varLiveness live = new varLiveness(arg.toString(), lineNum);
-      addLiveness(live);
+      addLiveness(new varLiveness(arg.toString(), lineNum));
     }
+
     ++lineNum;
   }
 
   public void visit(VCall c) throws RuntimeException {
     String code = new String();
-    if(c.dest != null)
-    {
-      varLiveness live = new varLiveness(c.addr.toString(), lineNum);
-      addLiveness(live);
-      varLiveness live2 = new varLiveness(c.dest.toString(), lineNum);
-      addLiveness(live2);
+    if(c.dest != null){
+      addLiveness(new varLiveness(c.addr.toString(), lineNum));
+      addLiveness(new varLiveness(c.dest.toString(), lineNum + 1));
     }
     else
-    {
-      varLiveness live = new varLiveness(c.addr.toString(), lineNum);
-      addLiveness(live);
-    }
+      addLiveness(new varLiveness(c.addr.toString(), lineNum));
+
     for(VOperand arg : c.args) {
-      varLiveness live3 = new varLiveness(arg.toString(), lineNum);
-      addLiveness(live3);
+      addLiveness(new varLiveness(arg.toString(), lineNum));
     }
+
     ++lineNum;
   }
 
@@ -161,13 +169,10 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
   public void visit(VMemRead r) throws RuntimeException {
     String base = ((VMemRef.Global)r.source).base.toString();
     int byteOffset = ((VMemRef.Global)r.source).byteOffset;
-    varLiveness live = new varLiveness(r.dest.toString(), lineNum);
-    addLiveness(live);
+    addLiveness(new varLiveness(r.dest.toString(), lineNum));
     if(!(base.equals("this") && byteOffset == 0))
-    {
-       varLiveness live2 = new varLiveness(base, lineNum);
-      addLiveness(live2);
-    }
+      addLiveness(new varLiveness(base, lineNum));
+
     ++lineNum;
   }
 
@@ -175,20 +180,17 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
     String base = ((VMemRef.Global)w.dest).base.toString();
     int byteOffset = ((VMemRef.Global)w.dest).byteOffset;
     String src = w.source.toString();
-    varLiveness live = new varLiveness(base, lineNum);
-    addLiveness(live);
-    if(byteOffset != 0){
-      varLiveness live2 = new varLiveness(src, lineNum);
-      addLiveness(live2);
-    }
+    addLiveness(new varLiveness(base, lineNum + 1));
+    if(byteOffset != 0)
+      addLiveness(new varLiveness(src, lineNum));
+
     ++lineNum;
   }
 
   public void visit(VReturn r) throws RuntimeException {
-    if(r.value != null) {
-      varLiveness live = new varLiveness(r.value.toString(), lineNum);
-      addLiveness(live);
-    }
+    if(r.value != null)
+      addLiveness(new varLiveness(r.value.toString(), lineNum));
+
     ++lineNum;
   }
 }

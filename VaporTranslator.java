@@ -115,12 +115,13 @@ public class VaporTranslator{
 
   //Liveness Intervals
   Vector<varLiveness> calcLiveness(VFunction function){
-    LivenessVisitor liveVisitor = new LivenessVisitor();
+    LivenessVisitor liveVisitor = new LivenessVisitor(function);
     VInstr[] body = function.body;
     for(VInstr inst : body) {
       inst.accept(liveVisitor);
     }
     liveVisitor.removeRedundant(function.vars, function.params);
+    //liveVisitor.printLiveness();
     return liveVisitor.getLiveList();
   }
 
@@ -159,17 +160,17 @@ public class VaporTranslator{
         for(; aRegCnt < backupLength; aRegCnt++)
           System.out.println("in[" + aRegCnt + "] = $a" + aRegCnt);
 
-        // back up t registers into local stack
-        final int endLocalT = localT + registers.highestT;
-        for (int i = localT; i < endLocalT; i++)
-          System.out.println("local[" + i + "] = $t" + (i - localT));
+        //// back up t registers into local stack
+        //final int endLocalT = localT + registers.highestT;
+        //for (int i = localT; i < endLocalT; i++)
+        //  System.out.println("local[" + i + "] = $t" + (i - localT));
 
         // assign values to a regs, call function
         inst.accept(visitor);
 
-        // The "restore t registers from local stack" section
-        for (int i = localT; i < endLocalT; i++)
-          System.out.println("$t" + (i - localT) + " = local[" + i + "]");
+        //// The "restore t registers from local stack" section
+        //for (int i = localT; i < endLocalT; i++)
+        //  System.out.println("$t" + (i - localT) + " = local[" + i + "]");
 
         // The "restore a registers with values from in" section
         --aRegCnt;
