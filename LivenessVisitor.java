@@ -110,8 +110,9 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
   public void visit(VAssign a) throws RuntimeException {
     varLiveness live = new varLiveness(a.source.toString(), lineNum);
     addLiveness(live);
-    live = new varLiveness(a.dest.toString(), ++lineNum);
+    live = new varLiveness(a.dest.toString(), lineNum);
     addLiveness(live);
+    ++lineNum;
   }
 
   public void visit(VBranch b) throws RuntimeException {
@@ -133,7 +134,7 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
     }
 
     if(c.dest != null)
-      addLiveness(new varLiveness(c.dest.toString(), lineNum + 1));
+      addLiveness(new varLiveness(c.dest.toString(), lineNum));
     //else
     //  addLiveness(new varLiveness(c.op.name, lineNum));
 
@@ -148,7 +149,7 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
     String code = new String();
     if(c.dest != null){
       addLiveness(new varLiveness(c.addr.toString(), lineNum));
-      addLiveness(new varLiveness(c.dest.toString(), lineNum + 1));
+      addLiveness(new varLiveness(c.dest.toString(), lineNum));
     }
     else
       addLiveness(new varLiveness(c.addr.toString(), lineNum));
@@ -180,7 +181,7 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
     String base = ((VMemRef.Global)w.dest).base.toString();
     int byteOffset = ((VMemRef.Global)w.dest).byteOffset;
     String src = w.source.toString();
-    addLiveness(new varLiveness(base, lineNum + 1));
+    addLiveness(new varLiveness(base, lineNum));
     if(byteOffset != 0)
       addLiveness(new varLiveness(src, lineNum));
 
