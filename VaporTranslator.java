@@ -126,9 +126,6 @@ public class VaporTranslator{
   }
 
   void printCode(VFunction function){
-    //for(VCodeLabel l : function.labels)
-    //  System.out.println(l.ident + ":" + l.instrIndex);
-
     VVisitor visitor = new VVisitor(varRegMap, liveList);
 
     printFunctionHeaders(function.ident);
@@ -160,17 +157,17 @@ public class VaporTranslator{
         for(; aRegCnt < backupLength; aRegCnt++)
           System.out.println("in[" + aRegCnt + "] = $a" + aRegCnt);
 
-        //// back up t registers into local stack
-        //final int endLocalT = localT + registers.highestT;
-        //for (int i = localT; i < endLocalT; i++)
-        //  System.out.println("local[" + i + "] = $t" + (i - localT));
+        // back up t registers into local stack
+        final int endLocalT = localT + registers.highestT;
+        for (int i = localT; i < endLocalT; i++)
+          System.out.println("local[" + i + "] = $t" + (i - localT));
 
         // assign values to a regs, call function
         inst.accept(visitor);
 
-        //// The "restore t registers from local stack" section
-        //for (int i = localT; i < endLocalT; i++)
-        //  System.out.println("$t" + (i - localT) + " = local[" + i + "]");
+        // The "restore t registers from local stack" section
+        for (int i = localT; i < endLocalT; i++)
+          System.out.println("$t" + (i - localT) + " = local[" + i + "]");
 
         // The "restore a registers with values from in" section
         --aRegCnt;
@@ -217,15 +214,14 @@ public class VaporTranslator{
     // Calculate in, out, and local
     StackInfoVisitor osv = new StackInfoVisitor();
 
+    // Note for if I was wrong: I deleted the check that makes in and out == 0 if # <= 4
+
     // In size is number of arguments (if greater than 4)
-    inStackSize = f.params.length > 4 ? f.params.length : 0;
+    inStackSize = f.params.length;
 
     // Out size is number of arguments of called function with most arguments (if > 4)
     for(VInstr inst : f.body) 
       outStackSize = Math.max(inst.accept(osv), outStackSize);  // StackSize of out stack
-
-    if (outStackSize <= 4)
-      outStackSize = 0;
 
     // Local size is the amount of S regs, amount of T regs, and amount of spills
     localStackSize = registers.highestS + registers.highestT + localStack.size();
