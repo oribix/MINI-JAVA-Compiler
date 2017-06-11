@@ -2,6 +2,7 @@ import cs132.vapor.ast.VAssign;
 import cs132.vapor.ast.VBranch;
 import cs132.vapor.ast.VBuiltIn;
 import cs132.vapor.ast.VCall;
+import cs132.vapor.ast.VCodeLabel;
 import cs132.vapor.ast.VFunction;
 import cs132.vapor.ast.VGoto;
 import cs132.vapor.ast.VMemRead;
@@ -14,16 +15,23 @@ import cs132.vapor.ast.VMemRef;
 import cs132.vapor.ast.VVarRef;
 import java.util.Vector;
 import java.util.Objects;
+import java.util.HashMap;
 
 public class LivenessVisitor extends Visitor<RuntimeException> {
   public int lineNum;
   Vector<varLiveness> liveList;
   VFunction function;
+  HashMap<String, VCodeLabel> labelsMap;
 
   public LivenessVisitor(VFunction f){
-    lineNum = 1;
+    lineNum = 0;
     liveList = new Vector<>();
     function = f;
+    labelsMap = new HashMap<>();
+
+    // For Goto function: quick label access
+    for (VCodeLabel cl : function.labels)
+      labelsMap.put(cl.ident, cl);
   }
 
   public Vector<varLiveness> getLiveList(){
@@ -32,7 +40,7 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
 
   public void resetLineNum()
   {
-    lineNum = 1;
+    lineNum = 0;
     liveList.clear();
   }
 
@@ -151,8 +159,27 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VGoto g) throws RuntimeException {
-    //varLiveness live = new varLiveness(g.target.toString(), lineNum);
-    //addLiveness(live);
+    // Variables that exist before a while loop and during one should be 
+    // alive for the entire duration of the while loop.
+    VCodeLabel cl = labelsMap.get(g.target.toString().substring(1));
+
+    // If a goto goes to a previous line, it's a while loop
+    if (cl != null && cl.instrIndex < lineNum) {
+      //System.out.println("HERE at " + lineNum + ": " + cl.ident + ", " + cl.instrIndex);
+
+      // Update livenesses for vars that meet the condition stated in the beginning of VGoto
+      for (varLiveness vl : liveList) {
+        if (vl.getStart() <= cl.instrIndex) {
+          if (vl.getEnd() >= cl.instrIndex) {
+            addLiveness(new varLiveness(vl.getName(), lineNum));
+            //System.out.println(vl.getName() + ", " + vl.getStart() + ", " + vl.getEnd());
+          }
+        } else {
+          break;
+        }
+      }
+    }
+
     ++lineNum;
   }
 
