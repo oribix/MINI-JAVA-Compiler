@@ -71,7 +71,9 @@ public class VVisitor extends Visitor<RuntimeException> {
       String argStr = getReg(arg.toString());
 
       // Argument can't be from stack. Put into $v# register before builtin call.
-      if (argStr.charAt(0) != '$') {
+      if (argStr.charAt(0) != '$' 
+          && argStr.charAt(0) != '\"'
+          && !Character.isDigit(argStr.charAt(0))) {
         // No one is using v0-v1 right now. This should be fine. (Also it was a lesani hint)
         String vArg = "$v0";
         if (usedv0)
