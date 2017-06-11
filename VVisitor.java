@@ -32,7 +32,16 @@ public class VVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VAssign a) throws RuntimeException {
-    System.out.println(getReg(a.dest) + " = " + getReg(a.source));
+    // Surprising note: we can't have both left and right side as stack variables
+    // Soln: pass right hand side to $v0 first
+    String lhs = getReg(a.dest), rhs = getReg(a.source);
+    if (lhs.charAt(0) != '$' && rhs.charAt(0) != '$') {
+      System.out.println("$v0 = " + rhs);
+      rhs = "$v0";
+    }
+
+    // Print the assignment
+    System.out.println(lhs + " = " + rhs);
   }
 
   public void visit(VBranch b) throws RuntimeException {
@@ -46,33 +55,40 @@ public class VVisitor extends Visitor<RuntimeException> {
   }
 
   public void visit(VBuiltIn c) throws RuntimeException {
-    int aRegCnt = 0;
-    for(VOperand arg : c.args) {
-      if(aRegCnt < 4) { // If an $a register is available
-        String regName = "$a" + aRegCnt;
-        //paramRegMap.put(param.toString(), regName);
-        //System.out.println(regName + " = " + getReg(arg.toString()));
-        ++aRegCnt;
-      }
-      else {
-        // If an $a register is not available, spill to out stack
-        String regName = "out[" + aRegCnt + ']';
-        //paramRegMap.put(param.toString(), regName); 
-        //System.out.println(regName + " = " + getReg(arg.toString()));
-        ++aRegCnt;
-      }
-    }
     String Out = new String();
+
+    // to store return value 
     if(c.dest != null) {
       Out += getReg(c.dest) + " = ";
     }
-    Out += c.op.name + '(';
-    aRegCnt = 0;
-    for(VOperand arg : c.args) {
-              Out += getReg(arg.toString()) + ' ';
 
+    // get name of builtin function 
+    Out += c.op.name + '(';
+
+    // arguments inside parentheses (at most 2)
+    boolean usedv0 = false; 
+    for(VOperand arg : c.args) {
+      String argStr = getReg(arg.toString());
+
+      // Argument can't be from stack. Put into $v# register before builtin call.
+      if (argStr.charAt(0) != '$') {
+        // No one is using v0-v1 right now. This should be fine. (Also it was a lesani hint)
+        String vArg = "$v0";
+        if (usedv0)
+          vArg = "$v1";
+        else
+          usedv0 = true;
+
+        System.out.println(vArg + " = " + argStr);
+        argStr = vArg;
+      }
+
+      // Print argument
+      Out += argStr + ' ';
     }
-    Out = Out.substring(0, Out.length() -1);
+
+    // End parenthesis
+    Out = Out.substring(0, Out.length() -1);  // Remove extra space
     Out += ')';
     System.out.println(Out);
   }
@@ -84,7 +100,7 @@ public class VVisitor extends Visitor<RuntimeException> {
 
       // Avoid using a registers on right hand side
       String srcName = getReg(arg.toString());
-      if (srcName.contains("$a"))
+      if (srcName.startsWith("$a"))
         srcName = "in[" + srcName.charAt(2) + "]";
 
       if(aRegCnt < 4) { 
@@ -95,6 +111,13 @@ public class VVisitor extends Visitor<RuntimeException> {
       else {
         // If an $a register is not available, spill to out stack
         String regName = "out[" + aRegCnt + ']';
+
+        // LHS and RHS can't both be from stack (See VAssign)
+        if (srcName.charAt(0) != '$') {
+          System.out.println("$v0 = " + srcName);
+          srcName = "$v0";
+        }
+
         System.out.println(regName + " = " + srcName);
       }
     }

@@ -75,6 +75,7 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
       for(String vName : varNames){
         if(name.equals(vName)) {
           validName = true;
+          break;
         }
       }
 
