@@ -32,4 +32,19 @@ public class varLiveness implements Comparable<varLiveness>{
     else if(this.end < v.end) return -1;
     else return 1;
   }
+
+  @Override
+  public boolean equals(Object o){
+    if(o == null) return false;
+    if(!(o instanceof varLiveness)) return false;
+    else{
+      varLiveness vl = (varLiveness)o;
+      return this.getName().equals(vl.getName());
+    }
+  }
+
+  @Override
+  public int hashCode(){
+    return this.getName().hashCode();
+  }
 }

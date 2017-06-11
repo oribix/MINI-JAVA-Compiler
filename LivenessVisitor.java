@@ -27,19 +27,20 @@ public class LivenessVisitor extends Visitor<RuntimeException> {
     lineNum = 1;
     liveList.clear();
   }
-  public void addLiveness(varLiveness var)
-  {
+
+  public void addLiveness(varLiveness var) {
     boolean found = false;
-    for(int i = 0; i < liveList.size(); i++)
-    {
-      if(Objects.equals(liveList.get(i).getName(), new String(var.getName())) )
-      {
+    
+    //update the end if the variable exist
+    for(varLiveness vl : liveList) {
+      if(vl.equals(var)) {
         found = true;
-        liveList.get(i).updateEnd(lineNum);
+        vl.updateEnd(lineNum);
       }
     }
-    if(!found)
-    {
+
+    //if the variable did not exist, then add it to the list
+    if(!found) {
       liveList.add(var);
     }
   }
